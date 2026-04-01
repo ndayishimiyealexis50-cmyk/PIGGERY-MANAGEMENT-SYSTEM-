@@ -59,11 +59,13 @@ async function ensureUserProfile(firebaseUser, extraFields={}){
     return profile;
   }
   const existing = snap.data();
-  // Always fix admin profile — force role to lowercase "admin"
-  if(isAdmin && (existing.role?.toLowerCase() !== "admin" || !existing.approved)){
+  // Always fix admin profile — force role to lowercase "admin" in Firestore permanently
+  if(isAdmin){
     const fixed = {...existing, role:"admin", approved:true};
-    await ref.update({role:"admin", approved:true});
-    return fixed;
+    if(existing.role !== "admin" || !existing.approved){
+      await ref.update({role:"admin", approved:true, email: firebaseUser.email||existing.email||null});
+    }
+    return fixed; // always return fixed regardless
   }
   return existing;
 }
@@ -3573,7 +3575,14 @@ function App(){
     setGlobalRefreshing(true);
     try{
       const [freshUsers,freshFarm]=await Promise.all([getAllUserProfiles(),getOnlineFarmData()]);
-      if(freshUsers&&freshUsers.length>0) setUsers(freshUsers);
+      if(freshUsers&&freshUsers.length>0){
+        const corrected=freshUsers.map(u=>
+          (u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"||u.role?.toLowerCase().trim()==="admin")&&u.name==="Alexis Ndayishimiye"
+            ? {...u, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
+            : u
+        );
+        setUsers(corrected);
+      }
       if(freshFarm) applyFarmData({...freshFarm, __loadCapital:true});
       setLastRefresh(new Date().toLocaleTimeString());
     }catch(e){console.error("refresh error",e);}
@@ -3618,7 +3627,12 @@ function App(){
     // Load users from Firestore users collection
     getAllUserProfiles().then(fresh=>{
       if(fresh&&fresh.length>0){
-        setUsers(fresh);
+        const corrected=fresh.map(u=>
+          (u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"||u.role?.toLowerCase().trim()==="admin")&&u.name==="Alexis Ndayishimiye"
+            ? {...u, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
+            : u
+        );
+        setUsers(corrected);
       }
       setUsersLoaded(true);
     }).catch(()=>{setUsersLoaded(true);});
@@ -3657,7 +3671,15 @@ function App(){
     const pollUsers=setInterval(async()=>{
       try{
         const fresh=await getAllUserProfiles();
-        if(fresh&&fresh.length>0) setUsers(fresh);
+        if(fresh&&fresh.length>0){
+          // Always enforce correct admin role from Firestore poll — never let stale data flip admin to worker
+          const corrected=fresh.map(u=>
+            u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"
+              ? {...u, role:"admin", approved:true}
+              : u
+          );
+          setUsers(corrected);
+        }
       }catch(e){}
     },8000);
 
@@ -4759,7 +4781,7 @@ function WorkerTaskChart({users,tasks}){
 }
 
 function TaskManager({user,users,tasks,setTasks,feeds}){
-  const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+  const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
   const workers=users.filter(u=>u.role==="worker"&&u.approved);
   const [form,setForm]=useState({title:"",desc:"",workerId:"",priority:"Normal",due:toDay()});
   const [saved,setSaved]=useState(false);
@@ -4887,7 +4909,7 @@ function TaskManager({user,users,tasks,setTasks,feeds}){
    4. VACCINATION TRACKER
 ═══════════════════════════════════════════════════ */
 function VaccinationTracker({pigs,users,vaccinations,setVaccinations,user,capital,setCapital}){
-  const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+  const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
   const active=pigs.filter(p=>p.status==="active");
   const [form,setForm]=useState({pigId:"",vaccine:"CSF Vaccine",date:toDay(),nextDue:"",notes:"",givenBy:user.name,cost:""});
   const [saved,setSaved]=useState(false);
@@ -4981,7 +5003,7 @@ function VaccinationTracker({pigs,users,vaccinations,setVaccinations,user,capita
 
 /* ─── Capital Manager (Admin Only) ─── */
 function CapitalManager({capital,setCapital,feeds,sales,expenses,incomes,pigs,user}){
-  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   const [tab,setTab]=useState("overview");
   const [form,setForm]=useState({type:"income",category:"Other Income",amount:"",description:"",date:toDay()});
   const [saved,setSaved]=useState(false);
@@ -6267,7 +6289,7 @@ function FeedLog({feeds,setFeeds,pigs,logs,sales,expenses,incomes,allData,user})
   const [filterType,setFilterType]=useState("");
   const [editId,setEditId]=useState(null);
   const [editForm,setEditForm]=useState(null);
-  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
 
   // ── Core Calculations ──
   const totalKg=feeds.reduce((s,f)=>s+(parseFloat(f.kg)||0),0);
@@ -6526,7 +6548,7 @@ function FeedLog({feeds,setFeeds,pigs,logs,sales,expenses,incomes,allData,user})
 function SaleLog({sales,setSales,pigs,feeds,logs,expenses,incomes,allData,user}){
   const [editId,setEditId]=useState(null);
   const [editForm,setEditForm]=useState(null);
-  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
       <div><div style={S.h1}>Sales Records</div><div style={S.sub}>{sales.length} sales · {fmtRWF(sales.reduce((s,l)=>s+(l.total||0),0))}</div></div>
@@ -6572,7 +6594,7 @@ function SaleLog({sales,setSales,pigs,feeds,logs,expenses,incomes,allData,user})
 
 /* ─── Daily Logs ─── */
 function DLogs({logs,setLogs,pigs,feeds,sales,expenses,incomes,allData,user}){
-  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
       <div><div style={S.h1}>Daily Farm Logs</div><div style={S.sub}>{logs.length} reports</div></div>
@@ -7048,7 +7070,7 @@ function ConfirmDialog({title,body,onConfirm,onCancel}){
 function WorkerPigEntry({user,pigs,setPigs,pendingPigs,setPendingPigs}){
   const BREEDS=["Landrace","Large White","Duroc","Hampshire","Mixed/Local"];
   const STAGES=["Piglet","Weaner","Grower","Finisher","Gilt","Sow","Boar"];
-  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
 
   function makeBlank(){
     const breed="Landrace",stage="Piglet";
@@ -7219,7 +7241,7 @@ function DEntry({user,pigs,logs,setLogs,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const newLog={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),approved:isAdmin?true:false};
     setLogs(p=>{const updated=[...p,newLog];fsSet("logs",updated);return updated;});
     if(isAdmin&&setCapital&&form.deaths>0&&parseFloat(form.deathLossAmount)>0){
@@ -7356,7 +7378,7 @@ function FEntry({user,pigs,feeds,setFeeds,capital,setCapital,tasks,setTasks}){
       setToast({type:"error",message:"Please enter valid kg and cost per kg values."});
       return;
     }
-    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const costVal=totalCost;
     const newFeed={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),kg,cost:costVal,costPerKg,approved:isAdmin?true:false};
     setFeeds(p=>{const updated=[...p,newFeed];fsSet("feeds",updated);return updated;});
@@ -7510,7 +7532,7 @@ function SEntry({user,pigs,setPigs,sales,setSales,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const calcTotal=parseFloat(form.weight)*parseFloat(form.priceKg)||0;
     const finalTotal=parseFloat(form.total)||calcTotal;
     const newSale={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),weight:parseFloat(form.weight)||0,priceKg:parseFloat(form.priceKg)||0,total:Math.round(finalTotal),approved:isAdmin?true:false};
@@ -7657,7 +7679,7 @@ function BEntry({user,expenses,setExpenses,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase().trim()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const newExp={
       id:uid(),workerId:user.id,worker:user.name,
       category:form.category,item:form.item||form.category,
