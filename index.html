@@ -424,8 +424,38 @@ function setOnlineFarmData(data){
   return _saveQueue;
 }
 
-function fsSet(key, list){
-  return setOnlineFarmData({[key]: list});
+/* ── Safe array merge: fetch server first, merge by id, then save ──
+   This prevents worker A from overwriting worker B's entries.
+   Each worker only touches their own new/updated item, not the full array. */
+async function fsSet(key, list){
+  _saveQueue = _saveQueue.then(async()=>{
+    try{
+      // 1. Get the very latest from server
+      const serverSnap = await FS_FARM_DOC.get();
+      const serverData = serverSnap.exists ? serverSnap.data() : {};
+      const serverList = Array.isArray(serverData[key]) ? serverData[key] : [];
+
+      // 2. Merge: server list wins for items not in local list (by id)
+      //    Local list items replace server items with same id
+      const localById = new Map(list.map(x=>[x.id, x]));
+      const serverOnly = serverList.filter(x => !localById.has(x.id));
+      const merged = [...serverOnly, ...list];
+
+      // 3. Update in-memory cache and save merged result
+      _latestFarmData = {...(_latestFarmData||{}), [key]: merged, updatedAt: new Date().toISOString()};
+      lsSetFarm(_latestFarmData);
+      await FS_FARM_DOC.set({...serverData, [key]: merged, updatedAt: _latestFarmData.updatedAt});
+      window._offlineStatus.lastSync = new Date().toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit"});
+      _notifySyncListeners();
+    }catch(e){
+      // Fallback: save what we have locally
+      console.warn("fsSet server-merge failed, saving local data",e);
+      _latestFarmData = {...(_latestFarmData||{}), [key]: list, updatedAt: new Date().toISOString()};
+      lsSetFarm(_latestFarmData);
+      try{ await FS_FARM_DOC.set(_latestFarmData); }catch(e2){}
+    }
+  });
+  return _saveQueue;
 }
 
 function fsListen(key, setter, setLoaded, fallback){
