@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FarmIQ — AI Pig Farm Management</title>
+<title>FarmIQ — AI Pig Farm Management v2.1</title>
 <script>
 window.__loadError=function(name){
   document.getElementById('root').innerHTML='<div style="padding:40px;font-family:sans-serif;color:#dc2626;max-width:520px;margin:60px auto;background:#fff;border-radius:12px;border:1px solid #fee2e2;box-shadow:0 4px 24px rgba(0,0,0,.1)"><h2 style="margin:0 0 10px">⚠️ FarmIQ Failed to Load</h2><p style="color:#374151">Could not load: <strong>'+name+'</strong></p><p style="color:#6b7280;font-size:14px">Check your internet connection and try again.</p><button onclick="location.reload()" style="margin-top:10px;padding:10px 22px;background:#16a34a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🔄 Retry</button></div>';
@@ -44,8 +44,8 @@ const ADMIN_EMAIL = "ndayishimiyealexis50@gmail.com";
 async function ensureUserProfile(firebaseUser, extraFields={}){
   const ref = _db.collection("users").doc(firebaseUser.uid);
   const snap = await ref.get();
+  const isAdmin = firebaseUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   if(!snap.exists){
-    const isAdmin = firebaseUser.email === ADMIN_EMAIL;
     const profile = {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -58,7 +58,14 @@ async function ensureUserProfile(firebaseUser, extraFields={}){
     await ref.set(profile);
     return profile;
   }
-  return snap.data();
+  const existing = snap.data();
+  // Always fix admin profile — force role to lowercase "admin"
+  if(isAdmin && (existing.role?.toLowerCase() !== "admin" || !existing.approved)){
+    const fixed = {...existing, role:"admin", approved:true};
+    await ref.update({role:"admin", approved:true});
+    return fixed;
+  }
+  return existing;
 }
 
 async function getUserProfile(uid){
@@ -3318,6 +3325,80 @@ function WorkerWAContacts(){
   </>);
 }
 
+
+function WorkerWASetup(){
+  const saved=getWAConfig();
+  const [phone,setPhone]=useState(saved.phone||"");
+  const [apikey,setApikey]=useState(saved.apikey||"");
+  const [enabled,setEnabled]=useState(!!saved.enabled);
+  const [feedback,setFeedback]=useState("");
+  const [testStatus,setTestStatus]=useState("");
+  const [testing,setTesting]=useState(false);
+
+  function save(){
+    setWAConfig({...saved,phone:phone.trim(),apikey:apikey.trim(),enabled});
+    setFeedback("✅ Saved!");
+    setTimeout(()=>setFeedback(""),3000);
+  }
+
+  async function test(){
+    setTesting(true);setTestStatus("");
+    const p=phone.trim();const k=apikey.trim();
+    if(!p||!k){setTestStatus("❌ Enter phone and API key first.");setTesting(false);return;}
+    const msg="🐷 FarmIQ Test Alert!\nWorker WhatsApp setup is working!\nDate: "+toDay();
+    const url="https://api.callmebot.com/whatsapp.php?phone="+encodeURIComponent(p)+"&text="+encodeURIComponent(msg)+"&apikey="+encodeURIComponent(k);
+    try{
+      await fetch(url,{method:"GET",mode:"no-cors"});
+      setTestStatus("📨 Test sent! Check your WhatsApp.");
+    }catch(e){setTestStatus("❌ Error: "+e.message);}
+    setTesting(false);
+  }
+
+  return(<div className="fade-in">
+    <div style={S.h1}>📱 My WhatsApp Setup</div>
+    <div style={S.sub}>Receive farm alerts on your WhatsApp phone</div>
+
+    <div style={{...S.card,background:"linear-gradient(135deg,rgba(37,211,102,.07),rgba(22,163,74,.04))",border:"1px solid rgba(37,211,102,.3)",marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:700,color:"#128C7E",marginBottom:8}}>📋 One-time Setup Steps</div>
+      <div style={{fontSize:12,color:C.muted,lineHeight:1.9}}>
+        <b>1.</b> Open WhatsApp and message <b>+34 644 65 00 63</b>:<br/>
+        <span style={{fontFamily:"monospace",background:C.elevated,padding:"2px 8px",borderRadius:4,display:"inline-block",margin:"4px 0",color:C.text}}>I allow callmebot to send me messages</span><br/>
+        <b>2.</b> You will receive your personal <b>API key</b> back.<br/>
+        <b>3.</b> Enter your number (with country code e.g. <b>+250788123456</b>) and the API key below.<br/>
+        <b>4.</b> Click <b>Save</b> then <b>Test</b> to confirm it works.
+      </div>
+    </div>
+
+    <div style={S.card}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.text}}>⚙️ My Settings</div>
+        <label style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer"}}>
+          <span style={{fontSize:12,color:enabled?C.accent:C.muted,fontWeight:600}}>{enabled?"🟢 On":"⚪ Off"}</span>
+          <div onClick={()=>setEnabled(p=>!p)} style={{width:40,height:22,borderRadius:11,background:enabled?C.accent:"#cbd5e1",position:"relative",cursor:"pointer",transition:"background .2s"}}>
+            <div style={{position:"absolute",top:3,left:enabled?21:3,width:16,height:16,borderRadius:"50%",background:"#fff",transition:"left .2s",boxShadow:"0 1px 4px rgba(0,0,0,.2)"}}/>
+          </div>
+        </label>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+        <div><label style={S.lbl}>📞 My WhatsApp Number</label><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+250788123456" style={S.inp}/></div>
+        <div><label style={S.lbl}>🔑 My CallMeBot API Key</label><input value={apikey} onChange={e=>setApikey(e.target.value)} placeholder="1234567" type="password" style={S.inp}/></div>
+      </div>
+      <div style={{display:"flex",gap:9}}>
+        <button onClick={save} style={{...S.btn(C.accent),flex:1}}>💾 Save</button>
+        <button onClick={test} disabled={testing} style={S.btn("#128C7E")}>{testing?"Sending…":"📨 Test"}</button>
+      </div>
+      {feedback&&<div style={{marginTop:10,padding:"8px 12px",background:C.accentSoft,border:"1px solid rgba(22,163,74,.3)",borderRadius:7,fontSize:13,color:C.accent}}>{feedback}</div>}
+      {testStatus&&<div style={{marginTop:10,padding:"8px 12px",background:"rgba(37,211,102,.07)",border:"1px solid rgba(37,211,102,.3)",borderRadius:7,fontSize:12,color:C.muted}}>{testStatus}</div>}
+    </div>
+
+    <div style={{...S.card,background:enabled&&phone&&apikey?"rgba(22,163,74,.04)":"rgba(245,158,11,.04)",border:"1px solid "+(enabled&&phone&&apikey?"rgba(22,163,74,.25)":"rgba(245,158,11,.3)")}}>
+      <div style={{fontSize:12,color:C.muted}}>
+        <b>Status:</b> {enabled&&phone&&apikey?"✅ You will receive WhatsApp alerts from FarmIQ.":"⚠️ Alerts inactive. "+(!phone?"Enter your phone. ":"")+(!apikey?"Enter your API key. ":"")+(!enabled?"Toggle On above. ":"")}
+      </div>
+    </div>
+  </div>);
+}
+
 function WhatsAppSettings({pigs,feeds,logs,sales,expenses,incomes,reproductions,stock}){
   const saved=getWAConfig();
   const [phone,setPhone]=useState(saved.phone||"");
@@ -3474,6 +3555,7 @@ function App(){
   const [capitalLoaded,setCapitalLoaded]=useState(false);
   const [user,setUser]=useState(null);
   const [sessionLoaded,setSessionLoaded]=useState(false);
+  const [pendingApproval,setPendingApproval]=useState(false);
   const [globalRefreshing,setGlobalRefreshing]=useState(false);
   const [lastRefresh,setLastRefresh]=useState("");
   const [undoStack,setUndoStack]=useState([]); // [{type,data,label,timestamp}]
@@ -3499,6 +3581,8 @@ function App(){
   }
 
   const [page,setPage]=useState("home");
+  // Reset page to "home" on login — keyed on uid so it fires once per login
+  useEffect(()=>{if(user?.uid) setPage("home");},[user?.uid]);
   const [showApiModal,setShowApiModal]=useState(false);
   const syncStatus=useSyncStatus();
 
@@ -3569,8 +3653,6 @@ function App(){
       setCapitalLoaded(true);setSessionsLoaded(true);
     });
 
-    setSessionLoaded(true);
-
     // Poll every 8s for new worker registrations
     const pollUsers=setInterval(async()=>{
       try{
@@ -3590,7 +3672,29 @@ function App(){
       }catch(e){}
     },8000);
 
-    return()=>{clearInterval(pollUsers);clearInterval(pollFarm);};
+    // Listen for Firebase auth state — fires on page load AND after Google sign-in
+    const unsubAuth = _auth.onAuthStateChanged(async fbUser=>{
+      if(fbUser){
+        // Always clear stale localStorage role cache before resolving profile
+        const ADMIN_EM = "ndayishimiyealexis50@gmail.com";
+        const forceAdmin = fbUser.email?.toLowerCase() === ADMIN_EM.toLowerCase();
+        const profile = await ensureUserProfile(fbUser);
+        // Force role to admin if email matches — never trust Firestore role alone
+        const resolvedRole = forceAdmin ? "admin" : (profile?.role?.toLowerCase()||"worker");
+        const resolvedProfile = {...profile, uid:fbUser.uid, email:fbUser.email, role:resolvedRole, approved: forceAdmin?true:(profile?.approved||false)};
+        if(resolvedProfile && (resolvedProfile.approved || forceAdmin)){
+          setUser(resolvedProfile);
+        } else if(profile&&!profile.approved){
+          await _auth.signOut();
+          setPendingApproval(true);
+        } else {
+          await _auth.signOut();
+        }
+      }
+      setSessionLoaded(true);
+    });
+
+    return()=>{clearInterval(pollUsers);clearInterval(pollFarm);unsubAuth();};
   },[]);
 
   // Save capital to Firestore whenever it changes (after initial load)
@@ -3691,8 +3795,9 @@ function App(){
     <div style={{width:120,height:3,background:"rgba(255,255,255,.1)",borderRadius:3,overflow:"hidden"}}><div style={{width:"60%",height:"100%",background:"#4ade80",borderRadius:3,animation:"spin 1s linear infinite"}}/></div>
   </div>);
 
-  if(!user)return <Login setUser={setUser}/>;
-  const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+  if(!user)return <Login setUser={setUser} pendingApproval={pendingApproval} setPendingApproval={setPendingApproval}/>;
+  // Triple-lock: role + email + never trust stale role alone
+  const isAdmin=(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com")&&user.email!=null;
   const pending=users.filter(u=>u.role==="worker"&&!u.approved);
   const lowStockCount=(stock||[]).filter(s=>s.quantity<=s.minLevel).length;
   const upcomingFarrows=reproductions.filter(r=>r.status==="pregnant"&&daysDiff(r.expectedFarrow)>=0&&daysDiff(r.expectedFarrow)<=7).length;
@@ -3730,7 +3835,7 @@ function App(){
     {id:"adminlog",l:"📝 Add Daily Log"},
     {id:"daylogs",l:"📋 Daily Logs"},
     {id:"messages",l:"📢 Messages"+(messages.length?" ("+messages.length+")":"")},
-    {id:"workers",l:"👷 Workers"+(pending.length?" ("+pending.length+")":"")},
+    {id:"workers",l:"👷 Workers"+((pending||[]).length?" ("+(pending||[]).length+")":"")},
     {id:"workerdata",l:"🛠️ Edit Worker Data"},
     {id:"remote",l:"🖥️ Remote Work"+(sessions.filter(s=>s.status==="pending").length?" ⚠️"+sessions.filter(s=>s.status==="pending").length:"")},
     {id:"performance",l:"👷 Performance"},
@@ -3754,7 +3859,8 @@ function App(){
     {id:"weekly",l:"📊 Weekly Report"},
     {id:"tasks",l:"✅ My Tasks"+(tasks.filter(t=>t.workerId===user.id&&t.status==="pending").length?" ("+tasks.filter(t=>t.workerId===user.id&&t.status==="pending").length+")":"")},
     {id:"vaccination",l:"💉 Vaccinations"+(vaccinations.filter(v=>daysDiff(v.nextDue)<=7&&daysDiff(v.nextDue)>=0).length?" 🔔":"")},
-    {id:"changepassword",l:"🔒 Change Password"}
+    {id:"changepassword",l:"🔒 Change Password"},
+    {id:"workerwa",l:"📱 WhatsApp Setup"+(isWAEnabled()?" 🟢":"")}
   ];
   const nav=isAdmin?adminNav:workerNav;
 
@@ -3819,7 +3925,8 @@ function App(){
       </div>)}
       <div style={S.ui}>
         <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{user.name}</div>
-        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:8,textTransform:"capitalize"}}>{user.role}</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4,textTransform:"capitalize"}}>{user.role}</div>
+        <div style={{fontSize:9,color:"rgba(255,255,255,.35)",marginBottom:8,wordBreak:"break-all"}}>{user.email}</div>
         <button style={{...S.btn("#991b1b"),fontSize:12,padding:"6px 13px"}} onClick={async()=>{await _auth.signOut();setUser(null);}}>Sign Out</button>
       </div>
     </div>
@@ -3903,13 +4010,17 @@ function App(){
       {!isAdmin&&page==="saleentry"&&<SEntry user={user} pigs={pigs} setPigs={setPigs} sales={sales} setSales={setSales} capital={capital} setCapital={setCapital}/>}
       {!isAdmin&&page==="buyentry"&&<BEntry user={user} expenses={expenses} setExpenses={setExpenses} capital={capital} setCapital={setCapital}/>}
       {!isAdmin&&page==="pigentry"&&<WorkerPigEntry user={user} pigs={pigs} setPigs={setPigs} pendingPigs={pendingPigs} setPendingPigs={setPendingPigs}/>}
-      {!isAdmin&&page==="remotework"&&<RemoteWorkPanel user={user} sessions={sessions} setSessions={setSessions} messages={messages}/>}
+      {!isAdmin&&page==="remotework"&&<RemoteWorkPanel user={user} sessions={sessions.filter(s=>s.workerId===user.uid||s.workerId===user.id)} setSessions={setSessions} messages={messages}/>}
       {isAdmin&&page==="performance"&&<WorkerPerformance users={users} logs={logs} feeds={feeds} sales={sales}/>}
+      {!isAdmin&&page==="performance"&&<WorkerPerformance users={users.filter(u=>u.uid===user.uid)} logs={logs.filter(l=>l.worker===user.name)} feeds={feeds.filter(f=>f.worker===user.name)} sales={sales.filter(s=>s.worker===user.name)}/>}
       {isAdmin&&page==="weekly"&&<WeeklyReport pigs={pigs} feeds={feeds} sales={sales} logs={logs} expenses={expenses} incomes={incomes} users={users} stock={stock}/>}
-      {page==="tasks"&&<TaskManager user={user} users={users} tasks={tasks} setTasks={setTasks} feeds={feeds}/>}
+      {!isAdmin&&page==="weekly"&&<WeeklyReport pigs={pigs} feeds={feeds.filter(f=>f.worker===user.name)} sales={sales.filter(s=>s.worker===user.name)} logs={logs.filter(l=>l.worker===user.name)} expenses={expenses} incomes={incomes} users={users.filter(u=>u.uid===user.uid)} stock={stock}/>}
+      {isAdmin&&page==="tasks"&&<TaskManager user={user} users={users} tasks={tasks} setTasks={setTasks} feeds={feeds}/>}
+      {!isAdmin&&page==="tasks"&&<TaskManager user={user} users={users} tasks={tasks.filter(t=>t.workerId===user.uid||t.workerId===user.id)} setTasks={setTasks} feeds={feeds}/>}
       {page==="vaccination"&&<VaccinationTracker pigs={pigs} users={users} vaccinations={vaccinations} setVaccinations={setVaccinations} user={user} capital={capital} setCapital={setCapital}/>}
       {page==="changepassword"&&<ChangePassword user={user}/>}
       {isAdmin&&page==="whatsapp"&&<WhatsAppSettings pigs={pigs} feeds={feeds} logs={logs} sales={sales} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock}/>}
+      {!isAdmin&&page==="workerwa"&&<WorkerWASetup/>}
       {!isAdmin&&page==="assessment"&&<WorkerPigAssessment user={user} pigs={pigs} assessments={assessments} setAssessments={setAssessments}/>}
       {isAdmin&&page==="assessmenthistory"&&<PigAssessmentHistory pigs={pigs} setPigs={setPigs} assessments={assessments} setAssessments={setAssessments} users={users}/>}
     </div>
@@ -4641,7 +4752,7 @@ function WorkerTaskChart({users,tasks}){
 }
 
 function TaskManager({user,users,tasks,setTasks,feeds}){
-  const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+  const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
   const workers=users.filter(u=>u.role==="worker"&&u.approved);
   const [form,setForm]=useState({title:"",desc:"",workerId:"",priority:"Normal",due:toDay()});
   const [saved,setSaved]=useState(false);
@@ -4769,7 +4880,7 @@ function TaskManager({user,users,tasks,setTasks,feeds}){
    4. VACCINATION TRACKER
 ═══════════════════════════════════════════════════ */
 function VaccinationTracker({pigs,users,vaccinations,setVaccinations,user,capital,setCapital}){
-  const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+  const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
   const active=pigs.filter(p=>p.status==="active");
   const [form,setForm]=useState({pigId:"",vaccine:"CSF Vaccine",date:toDay(),nextDue:"",notes:"",givenBy:user.name,cost:""});
   const [saved,setSaved]=useState(false);
@@ -4863,7 +4974,7 @@ function VaccinationTracker({pigs,users,vaccinations,setVaccinations,user,capita
 
 /* ─── Capital Manager (Admin Only) ─── */
 function CapitalManager({capital,setCapital,feeds,sales,expenses,incomes,pigs,user}){
-  const isAdmin=user&&(user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   const [tab,setTab]=useState("overview");
   const [form,setForm]=useState({type:"income",category:"Other Income",amount:"",description:"",date:toDay()});
   const [saved,setSaved]=useState(false);
@@ -5145,10 +5256,10 @@ function CapitalManager({capital,setCapital,feeds,sales,expenses,incomes,pigs,us
 }
 
 /* ─── Login ─── */
-function Login({setUser}){
+function Login({setUser, pendingApproval, setPendingApproval}){
   const [tab,setTab]=useState("login");
   const [form,setForm]=useState({name:"",email:"",password:"",confirmPassword:""});
-  const [err,setErr]=useState("");
+  const [err,setErr]=useState(pendingApproval?"Your account is pending admin approval. Please wait.":"");
   const [ok,setOk]=useState("");
   const [loading,setLoading]=useState(false);
   const [gLoading,setGLoading]=useState(false);
@@ -5161,13 +5272,20 @@ function Login({setUser}){
 
   async function handleFirebaseUser(fbUser, extraName){
     const profile = await ensureUserProfile(fbUser, extraName?{name:extraName}:{});
-    if(!profile.approved){
+    if(!profile){
+      await _auth.signOut();
+      setErr("Could not load your account. Check your internet and try again.");
+      return;
+    }
+    const forceAdmin = fbUser.email?.toLowerCase() === "ndayishimiyealexis50@gmail.com";
+    if(!profile.approved && !forceAdmin){
       await _auth.signOut();
       setErr("Your account is pending admin approval. Please wait.");
       return;
     }
-    setUser({...profile, uid:fbUser.uid, email:fbUser.email});
+    setUser({...profile, uid:fbUser.uid, email:fbUser.email, role: forceAdmin?"admin":profile.role, approved:true});
   }
+
 
   async function login(){
     setErr("");
@@ -5197,7 +5315,7 @@ function Login({setUser}){
       const cred = await _auth.createUserWithEmailAndPassword(form.email.trim(), form.password);
       await ensureUserProfile(cred.user, {name:form.name.trim()});
       await _auth.signOut();
-      const isAdmin = form.email.trim()===ADMIN_EMAIL;
+      const isAdmin = form.email.trim().toLowerCase()==="ndayishimiyealexis50@gmail.com";
       if(isAdmin){
         setOk("Admin account created! You can now sign in.");
       } else {
@@ -5220,7 +5338,13 @@ function Login({setUser}){
       const result = await _auth.signInWithPopup(_googleProvider);
       await handleFirebaseUser(result.user);
     }catch(e){
-      if(e.code!=="auth/popup-closed-by-user") setErr("Google sign-in failed: "+e.message);
+      const msg=
+        e.code==="auth/unauthorized-domain"?"This domain is not authorized. Add it in Firebase → Authentication → Authorized Domains.":
+        e.code==="auth/popup-blocked"?"Popup blocked. Please allow popups for this site and try again.":
+        e.code==="auth/popup-closed-by-user"?"":
+        e.code==="auth/cancelled-popup-request"?"":
+        "Google sign-in failed: "+e.message;
+      if(msg) setErr(msg);
     }
     setGLoading(false);
   }
@@ -6136,7 +6260,7 @@ function FeedLog({feeds,setFeeds,pigs,logs,sales,expenses,incomes,allData,user})
   const [filterType,setFilterType]=useState("");
   const [editId,setEditId]=useState(null);
   const [editForm,setEditForm]=useState(null);
-  const isAdmin=user&&(user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
 
   // ── Core Calculations ──
   const totalKg=feeds.reduce((s,f)=>s+(parseFloat(f.kg)||0),0);
@@ -6395,7 +6519,7 @@ function FeedLog({feeds,setFeeds,pigs,logs,sales,expenses,incomes,allData,user})
 function SaleLog({sales,setSales,pigs,feeds,logs,expenses,incomes,allData,user}){
   const [editId,setEditId]=useState(null);
   const [editForm,setEditForm]=useState(null);
-  const isAdmin=user&&(user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
       <div><div style={S.h1}>Sales Records</div><div style={S.sub}>{sales.length} sales · {fmtRWF(sales.reduce((s,l)=>s+(l.total||0),0))}</div></div>
@@ -6441,7 +6565,7 @@ function SaleLog({sales,setSales,pigs,feeds,logs,expenses,incomes,allData,user})
 
 /* ─── Daily Logs ─── */
 function DLogs({logs,setLogs,pigs,feeds,sales,expenses,incomes,allData,user}){
-  const isAdmin=user&&(user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
   return(<div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
       <div><div style={S.h1}>Daily Farm Logs</div><div style={S.sub}>{logs.length} reports</div></div>
@@ -6917,7 +7041,7 @@ function ConfirmDialog({title,body,onConfirm,onCancel}){
 function WorkerPigEntry({user,pigs,setPigs,pendingPigs,setPendingPigs}){
   const BREEDS=["Landrace","Large White","Duroc","Hampshire","Mixed/Local"];
   const STAGES=["Piglet","Weaner","Grower","Finisher","Gilt","Sow","Boar"];
-  const isAdmin=user&&(user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com");
+  const isAdmin=user&&(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com");
 
   function makeBlank(){
     const breed="Landrace",stage="Piglet";
@@ -7088,7 +7212,7 @@ function DEntry({user,pigs,logs,setLogs,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const newLog={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),approved:isAdmin?true:false};
     setLogs(p=>{const updated=[...p,newLog];fsSet("logs",updated);return updated;});
     if(isAdmin&&setCapital&&form.deaths>0&&parseFloat(form.deathLossAmount)>0){
@@ -7225,7 +7349,7 @@ function FEntry({user,pigs,feeds,setFeeds,capital,setCapital,tasks,setTasks}){
       setToast({type:"error",message:"Please enter valid kg and cost per kg values."});
       return;
     }
-    const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const costVal=totalCost;
     const newFeed={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),kg,cost:costVal,costPerKg,approved:isAdmin?true:false};
     setFeeds(p=>{const updated=[...p,newFeed];fsSet("feeds",updated);return updated;});
@@ -7379,7 +7503,7 @@ function SEntry({user,pigs,setPigs,sales,setSales,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const calcTotal=parseFloat(form.weight)*parseFloat(form.priceKg)||0;
     const finalTotal=parseFloat(form.total)||calcTotal;
     const newSale={...form,id:uid(),workerId:user.id,worker:user.name,date:toDay(),weight:parseFloat(form.weight)||0,priceKg:parseFloat(form.priceKg)||0,total:Math.round(finalTotal),approved:isAdmin?true:false};
@@ -7526,7 +7650,7 @@ function BEntry({user,expenses,setExpenses,capital,setCapital}){
 
   async function doSave(){
     setConfirm(false);
-    const isAdmin=user.role==="admin"||user.email==="ndayishimiyealexis50@gmail.com";
+    const isAdmin=user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com";
     const newExp={
       id:uid(),workerId:user.id,worker:user.name,
       category:form.category,item:form.item||form.category,
