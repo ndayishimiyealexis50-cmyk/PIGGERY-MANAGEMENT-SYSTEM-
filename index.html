@@ -3796,8 +3796,15 @@ function App(){
   </div>);
 
   if(!user)return <Login setUser={setUser} pendingApproval={pendingApproval} setPendingApproval={setPendingApproval}/>;
-  // Triple-lock: role + email + never trust stale role alone
-  const isAdmin=(user.role?.toLowerCase()==="admin"||user.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com")&&user.email!=null;
+
+  /* ── ROLE GUARD: email is the single source of truth for admin ── */
+  const ADMIN_EMAIL_CHECK = "ndayishimiyealexis50@gmail.com";
+  const emailIsAdmin = user.email?.toLowerCase() === ADMIN_EMAIL_CHECK.toLowerCase();
+  // If email matches admin but role is wrong (stale cache), fix it immediately
+  if(emailIsAdmin && user.role?.toLowerCase() !== "admin"){
+    setUser(u=>({...u, role:"admin", approved:true}));
+  }
+  const isAdmin = emailIsAdmin || user.role?.toLowerCase() === "admin";
   const pending=users.filter(u=>u.role==="worker"&&!u.approved);
   const lowStockCount=(stock||[]).filter(s=>s.quantity<=s.minLevel).length;
   const upcomingFarrows=reproductions.filter(r=>r.status==="pregnant"&&daysDiff(r.expectedFarrow)>=0&&daysDiff(r.expectedFarrow)<=7).length;
@@ -3925,7 +3932,7 @@ function App(){
       </div>)}
       <div style={S.ui}>
         <div style={{fontSize:13,fontWeight:600,color:"#fff"}}>{user.name}</div>
-        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4,textTransform:"capitalize"}}>{user.role}</div>
+        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginBottom:4,textTransform:"capitalize"}}>{isAdmin?"Admin":"Worker"}</div>
         <div style={{fontSize:9,color:"rgba(255,255,255,.35)",marginBottom:8,wordBreak:"break-all"}}>{user.email}</div>
         <button style={{...S.btn("#991b1b"),fontSize:12,padding:"6px 13px"}} onClick={async()=>{await _auth.signOut();setUser(null);}}>Sign Out</button>
       </div>
