@@ -5300,6 +5300,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
   const focusOut=e=>{e.target.style.borderColor="#e2e8f0";e.target.style.boxShadow="none";};
 
   async function handleFirebaseUser(fbUser, extraName){
+    // Just ensure profile exists — onAuthStateChanged in App handles setUser
     const profile = await ensureUserProfile(fbUser, extraName?{name:extraName}:{});
     if(!profile){
       await _auth.signOut();
@@ -5312,7 +5313,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
       setErr("Your account is pending admin approval. Please wait.");
       return;
     }
-    setUser({...profile, uid:fbUser.uid, email:fbUser.email, role: forceAdmin?"admin":profile.role, approved:true});
+    // DO NOT call setUser here — onAuthStateChanged handles it with correct role
   }
 
 
