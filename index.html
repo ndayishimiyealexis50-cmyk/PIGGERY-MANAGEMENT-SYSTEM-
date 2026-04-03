@@ -87,6 +87,29 @@ async function getAllUserProfiles(){
     return snap.docs.map(d=>d.data());
   }catch(e){ return []; }
 }
+
+/* ─── OTP Helpers (Password Reset via WhatsApp) ─── */
+function generateOTP(){
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+async function storeOTP(uid, code){
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  await _db.collection("passwordOTPs").doc(uid).set({
+    code, expiresAt, used: false, createdAt: new Date().toISOString()
+  });
+}
+async function verifyOTP(uid, inputCode){
+  try{
+    const snap = await _db.collection("passwordOTPs").doc(uid).get();
+    if(!snap.exists) return {ok:false, reason:"No OTP found. Please request a new one."};
+    const {code, expiresAt, used} = snap.data();
+    if(used) return {ok:false, reason:"This OTP has already been used. Request a new one."};
+    if(new Date() > new Date(expiresAt)) return {ok:false, reason:"OTP expired (10 min limit). Please request a new one."};
+    if(code !== inputCode.trim()) return {ok:false, reason:"Incorrect OTP code. Please try again."};
+    await _db.collection("passwordOTPs").doc(uid).update({used:true});
+    return {ok:true};
+  }catch(e){ return {ok:false, reason:"Verification error: "+e.message}; }
+}
 </script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -5448,6 +5471,187 @@ function CapitalManager({capital,setCapital,feeds,sales,expenses,incomes,pigs,us
   </div>);
 }
 
+/* ─── Forgot Password Modal ─── */
+function ForgotPasswordModal({initialEmail, onClose}){
+  const [step,setStep]=useState("choose"); // choose | email_sent | otp_send | otp_enter
+  const [email,setEmail]=useState(initialEmail||"");
+  const [otpInput,setOtpInput]=useState("");
+  const [otpUid,setOtpUid]=useState(null);
+  const [countdown,setCountdown]=useState(0);
+  const [err,setErr]=useState("");
+  const [ok,setOk]=useState("");
+  const [busy,setBusy]=useState(false);
+
+  useEffect(()=>{
+    if(countdown<=0) return;
+    const t=setTimeout(()=>setCountdown(c=>c-1),1000);
+    return()=>clearTimeout(t);
+  },[countdown]);
+
+  /* Send Firebase reset email */
+  async function sendEmail(){
+    setErr("");
+    const e=(email||"").trim();
+    if(!e) return setErr("Please enter your email address.");
+    setBusy(true);
+    try{
+      await _auth.sendPasswordResetEmail(e);
+      setStep("email_sent");
+    }catch(ex){
+      setErr(ex.code==="auth/user-not-found"?"No account found with that email."
+        :ex.code==="auth/invalid-email"?"Invalid email address."
+        :"Error: "+ex.message);
+    }
+    setBusy(false);
+  }
+
+  /* Look up user by email to get their uid for OTP */
+  async function startOTPFlow(){
+    setErr("");
+    const e=(email||"").trim();
+    if(!e) return setErr("Please enter your email address first.");
+    setBusy(true);
+    try{
+      // Query Firestore for user with this email
+      const snap=await _db.collection("users").where("email","==",e).limit(1).get();
+      if(snap.empty){ setErr("No account found with that email."); setBusy(false); return; }
+      const profile=snap.docs[0].data();
+      const uid=profile.uid;
+      const waConf=getWAConfig();
+      if(!waConf.enabled||!waConf.phone||!waConf.apikey){
+        setErr("WhatsApp (CallMeBot) is not configured on this account. Use email recovery instead.");
+        setBusy(false); return;
+      }
+      // Generate and store OTP
+      const code=generateOTP();
+      await storeOTP(uid,code);
+      // Send via WhatsApp
+      const msg=`🔐 FarmIQ Recovery OTP\n\nYour one-time code: *${code}*\n\nExpires in 10 minutes. Do not share this code.`;
+      const url=`https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(waConf.phone)}&text=${encodeURIComponent(msg)}&apikey=${encodeURIComponent(waConf.apikey)}`;
+      await fetch(url,{method:"GET",mode:"no-cors"});
+      setOtpUid(uid);
+      setCountdown(60);
+      setStep("otp_enter");
+      setOk("📱 OTP sent to the WhatsApp linked to this account.");
+    }catch(ex){ setErr("Failed: "+ex.message); }
+    setBusy(false);
+  }
+
+  /* Verify OTP then send reset email */
+  async function verifyAndSend(){
+    setErr("");
+    if(otpInput.length!==6) return setErr("Please enter the full 6-digit code.");
+    setBusy(true);
+    try{
+      const result=await verifyOTP(otpUid,otpInput);
+      if(!result.ok){ setErr("❌ "+result.reason); setBusy(false); return; }
+      // OTP valid → send Firebase reset email
+      await _auth.sendPasswordResetEmail(email.trim());
+      setStep("email_sent");
+      setOk("✅ OTP verified! Reset link sent to "+email.trim()+".");
+    }catch(ex){ setErr("Error: "+ex.message); }
+    setBusy(false);
+  }
+
+  const overlay={position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16};
+  const box={background:"#fff",borderRadius:18,width:"100%",maxWidth:400,boxShadow:"0 24px 64px rgba(0,0,0,.2)",overflow:"hidden"};
+  const msgBox=(type,txt)=>(<div style={{padding:"10px 14px",background:type==="err"?"rgba(239,68,68,.08)":"rgba(22,163,74,.08)",border:"1px solid "+(type==="err"?"rgba(239,68,68,.25)":"rgba(22,163,74,.25)"),borderRadius:9,color:type==="err"?"#dc2626":"#16a34a",fontSize:13,marginBottom:14,lineHeight:1.5}}>{txt}</div>);
+  const inp3={background:"#f8fafc",border:"1.5px solid #e2e8f0",color:"#1e293b",borderRadius:10,padding:"11px 14px",width:"100%",fontSize:13.5,outline:"none",boxSizing:"border-box",fontFamily:"inherit"};
+
+  return(<div style={overlay} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={box} className="slide-up">
+      {/* Header */}
+      <div style={{background:"linear-gradient(135deg,#0f2318,#1a3d26)",padding:"22px 24px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:17,fontWeight:800,color:"#fff"}}>🔐 Account Recovery</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.5)",marginTop:3}}>Regain access to your FarmIQ account</div>
+        </div>
+        <button onClick={onClose} style={{background:"rgba(255,255,255,.1)",border:"none",color:"rgba(255,255,255,.7)",width:30,height:30,borderRadius:"50%",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit"}}>✕</button>
+      </div>
+
+      <div style={{padding:"22px 24px 26px"}}>
+        {err&&msgBox("err",err)}
+        {ok&&msgBox("ok",ok)}
+
+        {/* STEP: CHOOSE METHOD */}
+        {step==="choose"&&(<div>
+          <div style={{marginBottom:18}}>
+            <label style={{fontSize:11,color:"#64748b",display:"block",marginBottom:5,fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Your Email Address</label>
+            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" style={inp3} autoCapitalize="none" onKeyDown={e=>e.key==="Enter"&&sendEmail()}/>
+          </div>
+          <div style={{fontSize:12,color:"#64748b",marginBottom:14,fontWeight:600}}>Choose recovery method:</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {/* Email recovery */}
+            <button onClick={sendEmail} disabled={busy} style={{padding:"13px 16px",borderRadius:12,border:"2px solid rgba(37,99,235,.25)",background:"rgba(37,99,235,.04)",color:"#1e293b",cursor:"pointer",fontFamily:"inherit",textAlign:"left",transition:"all .2s"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{fontSize:26}}>📧</div>
+                <div>
+                  <div style={{fontWeight:700,fontSize:14,color:"#1e293b"}}>Send Reset Link via Email</div>
+                  <div style={{fontSize:11,color:"#64748b",marginTop:2}}>Receive a secure link directly in your inbox</div>
+                </div>
+              </div>
+            </button>
+            {/* WhatsApp OTP */}
+            <button onClick={startOTPFlow} disabled={busy} style={{padding:"13px 16px",borderRadius:12,border:"2px solid rgba(34,197,94,.25)",background:"rgba(34,197,94,.04)",color:"#1e293b",cursor:"pointer",fontFamily:"inherit",textAlign:"left",transition:"all .2s"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{fontSize:26}}>📱</div>
+                <div>
+                  <div style={{fontWeight:700,fontSize:14,color:"#1e293b"}}>Verify via WhatsApp OTP</div>
+                  <div style={{fontSize:11,color:"#64748b",marginTop:2}}>Get a 6-digit code on WhatsApp, then reset via email</div>
+                </div>
+              </div>
+            </button>
+          </div>
+          {busy&&<div style={{textAlign:"center",marginTop:14,color:"#64748b",fontSize:13}}>⏳ Please wait…</div>}
+        </div>)}
+
+        {/* STEP: OTP ENTRY */}
+        {step==="otp_enter"&&(<div>
+          <div style={{textAlign:"center",marginBottom:18}}>
+            <div style={{fontSize:36,marginBottom:8}}>📲</div>
+            <div style={{fontWeight:700,fontSize:15,color:"#1e293b",marginBottom:4}}>Enter WhatsApp OTP</div>
+            <div style={{fontSize:12,color:"#64748b"}}>Check your WhatsApp for a 6-digit code · expires in 10 min</div>
+          </div>
+          {/* Digit boxes */}
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:16}}>
+            {Array.from({length:6}).map((_,i)=>(
+              <div key={i} style={{width:40,height:50,borderRadius:9,border:"2px solid "+(i<otpInput.length?"#16a34a":"#e2e8f0"),background:i<otpInput.length?"rgba(22,163,74,.06)":"#f8fafc",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#1e293b",transition:"all .15s"}}>
+                {otpInput[i]||""}
+              </div>
+            ))}
+          </div>
+          <input type="text" inputMode="numeric" maxLength={6} value={otpInput} onChange={e=>setOtpInput(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&otpInput.length===6&&verifyAndSend()} placeholder="Tap to enter code" style={{...inp3,letterSpacing:8,fontSize:20,textAlign:"center",fontWeight:700,marginBottom:14}}/>
+          <button onClick={verifyAndSend} disabled={busy||otpInput.length<6} style={{width:"100%",padding:"12px",borderRadius:11,border:"none",background:otpInput.length===6?"linear-gradient(135deg,#16a34a,#15803d)":"#cbd5e1",color:"#fff",fontWeight:700,fontSize:14,cursor:otpInput.length===6?"pointer":"default",fontFamily:"inherit",marginBottom:10}}>
+            {busy?"⏳ Verifying…":"✅ Verify Code & Send Reset Email"}
+          </button>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <button onClick={()=>{setStep("choose");setOtpInput("");setErr("");setOk("");}} style={{background:"none",border:"none",color:"#64748b",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>← Back</button>
+            <button onClick={()=>{if(countdown===0){setStep("choose");setOtpInput("");setErr("");setOk("");}else setErr(`Wait ${countdown}s before retrying.`);}} style={{background:"none",border:"none",color:countdown>0?"#94a3b8":"#16a34a",fontSize:12,cursor:countdown>0?"default":"pointer",fontFamily:"inherit"}}>
+              {countdown>0?`Resend in ${countdown}s`:"Try again"}
+            </button>
+          </div>
+        </div>)}
+
+        {/* STEP: EMAIL SENT SUCCESS */}
+        {step==="email_sent"&&(<div style={{textAlign:"center",padding:"10px 0"}}>
+          <div style={{fontSize:54,marginBottom:14}}>✉️</div>
+          <div style={{fontWeight:800,fontSize:18,color:"#1e293b",marginBottom:8}}>Check Your Email!</div>
+          <div style={{fontSize:13,color:"#64748b",lineHeight:1.8,marginBottom:20}}>
+            A password reset link has been sent to<br/>
+            <strong style={{color:"#1e293b"}}>{(email||"").trim()}</strong>
+          </div>
+          <div style={{padding:"12px 16px",background:"rgba(59,130,246,.06)",border:"1px solid rgba(59,130,246,.15)",borderRadius:10,fontSize:12,color:"#3b82f6",textAlign:"left",lineHeight:1.7,marginBottom:18}}>
+            💡 <strong>Tips:</strong> Check your spam/junk folder. The link expires in 1 hour. Click it on the same device for best results.
+          </div>
+          <button onClick={onClose} style={{width:"100%",padding:"12px",borderRadius:11,border:"none",background:"linear-gradient(135deg,#16a34a,#15803d)",color:"#fff",fontWeight:700,fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+            Done — Back to Sign In
+          </button>
+        </div>)}
+      </div>
+    </div>
+  </div>);
+}
+
 /* ─── Login ─── */
 function Login({setUser, pendingApproval, setPendingApproval}){
   const [tab,setTab]=useState("login");
@@ -5456,6 +5660,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
   const [ok,setOk]=useState("");
   const [loading,setLoading]=useState(false);
   const [gLoading,setGLoading]=useState(false);
+  const [showForgot,setShowForgot]=useState(false);
 
   /* ── helpers ── */
   const inp2={background:"#f8fafc",border:"1.5px solid #e2e8f0",color:"#1e293b",borderRadius:10,padding:"11px 14px",width:"100%",fontSize:13.5,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color .2s, box-shadow .2s"};
@@ -5629,7 +5834,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
 
           {/* Forgot password */}
           {tab==="login"&&<div style={{textAlign:"right",marginTop:8}}>
-            <button onClick={forgotPassword} style={{background:"none",border:"none",color:"#16a34a",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,padding:0}}>Forgot password?</button>
+            <button onClick={()=>setShowForgot(true)} style={{background:"none",border:"none",color:"#16a34a",fontSize:12,cursor:"pointer",fontFamily:"inherit",fontWeight:600,padding:0}}>Forgot password?</button>
           </div>}
 
           {/* Messages */}
@@ -5648,6 +5853,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
         </div>
       </div>
     </div>
+    {showForgot&&<ForgotPasswordModal initialEmail={form.email} onClose={()=>setShowForgot(false)}/>}
   );
 }
 
@@ -6792,56 +6998,249 @@ function DLogs({logs,setLogs,pigs,feeds,sales,expenses,incomes,allData,user}){
 
 
 /* ─── Change Password ─── */
+/* ─── Change Password (Password · OTP · Recovery) ─── */
 function ChangePassword({user}){
+  const [mode,setMode]=useState("password");
+  // Password tab
   const [form,setForm]=useState({current:"",newPass:"",confirm:""});
+  // OTP tab
+  const [otpStep,setOtpStep]=useState(1); // 1=send, 2=enter code
+  const [otpInput,setOtpInput]=useState("");
+  const [otpCountdown,setOtpCountdown]=useState(0);
+  // Recovery tab
+  const [recoveryEmail,setRecoveryEmail]=useState(user?.email||"");
+  // Shared
   const [err,setErr]=useState("");
   const [ok,setOk]=useState("");
   const [saving,setSaving]=useState(false);
 
-  async function save(){
-    setErr("");setOk("");
+  const fbUser=_auth.currentUser;
+  const hasPasswordProvider=fbUser?.providerData?.some(p=>p.providerId==="password");
+  const isGoogleOnly=fbUser?.providerData?.every(p=>p.providerId==="google.com");
+  const waOk=isWAEnabled();
+
+  /* countdown for OTP resend */
+  useEffect(()=>{
+    if(otpCountdown<=0) return;
+    const t=setTimeout(()=>setOtpCountdown(c=>c-1),1000);
+    return()=>clearTimeout(t);
+  },[otpCountdown]);
+
+  function reset(){setErr("");setOk("");}
+  function switchMode(m){setMode(m);reset();setOtpStep(1);setOtpInput("");}
+
+  /* ── Tab 1: Password change (current → new) ── */
+  async function savePassword(){
+    reset();
+    if(!hasPasswordProvider) return setErr("You signed in with Google. Use the OTP or Recovery tab instead.");
     if(!form.current||!form.newPass||!form.confirm) return setErr("Please fill in all fields.");
     if(form.newPass.length<6) return setErr("New password must be at least 6 characters.");
     if(form.newPass!==form.confirm) return setErr("New passwords do not match.");
+    if(form.newPass===form.current) return setErr("New password must be different from current.");
     setSaving(true);
     try{
-      // Re-authenticate first, then update
-      const fbUser=_auth.currentUser;
-      const cred=firebase.auth.EmailAuthProvider.credential(fbUser.email, form.current);
+      const cred=firebase.auth.EmailAuthProvider.credential(fbUser.email,form.current);
       await fbUser.reauthenticateWithCredential(cred);
       await fbUser.updatePassword(form.newPass);
       setOk("✅ Password changed successfully!");
       setForm({current:"",newPass:"",confirm:""});
     }catch(e){
-      const msg=e.code==="auth/wrong-password"?"Current password is incorrect."
+      setErr(e.code==="auth/wrong-password"?"❌ Current password is incorrect."
         :e.code==="auth/too-many-requests"?"Too many attempts. Try again later."
-        :"Failed: "+e.message;
-      setErr(msg);
+        :"Failed: "+e.message);
     }
     setSaving(false);
   }
 
-  return(<div style={{maxWidth:420}}>
-    <div style={S.h1}>🔒 Change Password</div>
-    <div style={S.sub}>Update your login password</div>
+  /* ── Tab 2: OTP via WhatsApp ── */
+  async function sendOTP(){
+    reset();
+    if(!waOk) return setErr("WhatsApp (CallMeBot) is not configured. Go to Settings → WhatsApp Notifications to set it up first.");
+    if(otpCountdown>0) return setErr(`Please wait ${otpCountdown}s before requesting a new code.`);
+    setSaving(true);
+    try{
+      const code=generateOTP();
+      await storeOTP(fbUser.uid,code);
+      const msg=`🔐 FarmIQ Password OTP\n\nYour one-time code: *${code}*\n\nThis code expires in 10 minutes.\nDo NOT share it with anyone.`;
+      const res=await sendWhatsApp(msg);
+      if(res.ok===false&&res.reason==="not_configured"){
+        setErr("WhatsApp not configured. Set it up in Settings → WhatsApp Notifications.");
+      } else {
+        setOtpStep(2);
+        setOtpCountdown(60);
+        setOk("📱 OTP sent to your WhatsApp! Enter the 6-digit code below.");
+      }
+    }catch(e){ setErr("Failed to send OTP: "+e.message); }
+    setSaving(false);
+  }
+
+  async function verifyOTPAndReset(){
+    reset();
+    if(otpInput.length!==6) return setErr("Please enter the full 6-digit OTP code.");
+    setSaving(true);
+    try{
+      const result=await verifyOTP(fbUser.uid,otpInput);
+      if(!result.ok){ setErr("❌ "+result.reason); setSaving(false); return; }
+      // OTP is valid — send Firebase password reset email as the secure channel
+      await _auth.sendPasswordResetEmail(fbUser.email);
+      setOtpStep(1);
+      setOtpInput("");
+      setOk("✅ OTP verified! A secure password reset link has been sent to "+fbUser.email+". Click it to set your new password.");
+    }catch(e){ setErr("Verification failed: "+e.message); }
+    setSaving(false);
+  }
+
+  /* ── Tab 3: Recovery (email reset link) ── */
+  async function sendRecovery(){
+    reset();
+    const email=(recoveryEmail||"").trim();
+    if(!email) return setErr("Please enter your email address.");
+    setSaving(true);
+    try{
+      await _auth.sendPasswordResetEmail(email);
+      setOk("✅ Password reset link sent to "+email+". Check your inbox and spam folder.");
+    }catch(e){
+      setErr(e.code==="auth/user-not-found"?"No account found with that email."
+        :e.code==="auth/invalid-email"?"Invalid email address."
+        :"Failed: "+e.message);
+    }
+    setSaving(false);
+  }
+
+  const msgBox=(type,txt)=>(<div style={{padding:"10px 14px",background:type==="err"?"rgba(239,68,68,.08)":"rgba(22,163,74,.08)",border:"1px solid "+(type==="err"?"rgba(239,68,68,.25)":"rgba(22,163,74,.25)"),borderRadius:9,color:type==="err"?C.red:C.accent,fontSize:13,marginBottom:14,lineHeight:1.5}}>{txt}</div>);
+
+  return(<div style={{maxWidth:460}} className="fade-in">
+    <div style={S.h1}>🔒 Password & Security</div>
+    <div style={S.sub}>Change password · OTP verification · Account recovery</div>
+
+    {/* Mode selector */}
+    <div style={{display:"flex",background:C.elevated,borderRadius:10,padding:3,marginBottom:16,gap:2,border:"1px solid "+C.border}}>
+      {[["password","🔑 Password"],["otp","📱 OTP"],["recovery","📧 Recovery"]].map(([m,l])=>(
+        <button key={m} style={S.tab(mode===m)} onClick={()=>switchMode(m)}>{l}</button>
+      ))}
+    </div>
+
     <div style={S.card}>
-      {err&&<div style={{padding:"9px 13px",background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.25)",borderRadius:8,color:C.red,fontSize:13,marginBottom:12}}>{err}</div>}
-      {ok&&<div style={{padding:"9px 13px",background:"rgba(22,163,74,.08)",border:"1px solid rgba(22,163,74,.25)",borderRadius:8,color:C.accent,fontSize:13,marginBottom:12}}>{ok}</div>}
-      <div style={{marginBottom:12}}>
-        <label style={S.lbl}>Current Password</label>
-        <input type="password" placeholder="Enter current password" value={form.current} onChange={e=>setForm({...form,current:e.target.value})} style={S.inp}/>
-      </div>
-      <div style={{marginBottom:12}}>
-        <label style={S.lbl}>New Password</label>
-        <input type="password" placeholder="Min 6 characters" value={form.newPass} onChange={e=>setForm({...form,newPass:e.target.value})} style={S.inp}/>
-      </div>
-      <div style={{marginBottom:16}}>
-        <label style={S.lbl}>Confirm New Password</label>
-        <input type="password" placeholder="Repeat new password" value={form.confirm} onChange={e=>setForm({...form,confirm:e.target.value})} style={S.inp}/>
-      </div>
-      <button onClick={save} disabled={saving} style={{...S.btn(),width:"100%",padding:12,fontSize:14}}>
-        {saving?"⏳ Saving...":"🔒 Change Password"}
-      </button>
+      {err&&msgBox("err",err)}
+      {ok&&msgBox("ok",ok)}
+
+      {/* ── PASSWORD TAB ── */}
+      {mode==="password"&&(<div>
+        {isGoogleOnly&&<div style={{padding:"11px 14px",background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.3)",borderRadius:9,fontSize:13,color:C.amber,marginBottom:16,lineHeight:1.6}}>
+          ⚠️ Your account uses <strong>Google Sign-In</strong> only. Switch to the <strong>OTP</strong> tab to add/change a password, or use <strong>Recovery</strong> to get a reset link via email.
+        </div>}
+        {!isGoogleOnly&&(<>
+          <div style={{marginBottom:12}}>
+            <label style={S.lbl}>Current Password</label>
+            <input type="password" placeholder="Enter your current password" value={form.current} onChange={e=>setForm({...form,current:e.target.value})} onKeyDown={e=>e.key==="Enter"&&savePassword()} style={S.inp}/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={S.lbl}>New Password <span style={{color:C.faint,fontWeight:400,textTransform:"none"}}>(min 6 characters)</span></label>
+            <input type="password" placeholder="Enter new password" value={form.newPass} onChange={e=>setForm({...form,newPass:e.target.value})} style={S.inp}/>
+            {/* Strength bar */}
+            {form.newPass.length>0&&<div style={{marginTop:6}}>
+              <div style={{height:4,borderRadius:3,background:C.elevated,overflow:"hidden"}}>
+                <div style={{height:"100%",transition:"width .3s,background .3s",width:form.newPass.length<6?"30%":form.newPass.length<10?"60%":"100%",background:form.newPass.length<6?C.red:form.newPass.length<10?C.amber:C.accent}}/>
+              </div>
+              <div style={{fontSize:10,color:form.newPass.length<6?C.red:form.newPass.length<10?C.amber:C.accent,marginTop:3}}>
+                {form.newPass.length<6?"Weak":form.newPass.length<10?"Fair":"Strong"}
+              </div>
+            </div>}
+          </div>
+          <div style={{marginBottom:18}}>
+            <label style={S.lbl}>Confirm New Password</label>
+            <input type="password" placeholder="Repeat new password" value={form.confirm} onChange={e=>setForm({...form,confirm:e.target.value})} onKeyDown={e=>e.key==="Enter"&&savePassword()} style={{...S.inp,borderColor:form.confirm&&form.confirm!==form.newPass?C.red:undefined}}/>
+            {form.confirm&&form.confirm!==form.newPass&&<div style={{fontSize:11,color:C.red,marginTop:3}}>Passwords don't match</div>}
+          </div>
+          <button onClick={savePassword} disabled={saving} style={{...S.btn(),width:"100%",padding:12,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+            {saving?<><span className="spin" style={{width:13,height:13,border:"2px solid rgba(255,255,255,.3)",borderTop:"2px solid #fff",borderRadius:"50%",display:"inline-block"}}/>Saving…</>:"🔒 Change Password"}
+          </button>
+          <div style={{textAlign:"center",marginTop:12}}>
+            <button onClick={()=>switchMode("recovery")} style={{background:"none",border:"none",color:C.accent,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Forgot current password? Use Recovery →</button>
+          </div>
+        </>)}
+      </div>)}
+
+      {/* ── OTP TAB ── */}
+      {mode==="otp"&&(<div>
+        <div style={{padding:"10px 14px",background:"rgba(99,102,241,.06)",border:"1px solid rgba(99,102,241,.2)",borderRadius:9,fontSize:12,color:"#6366f1",marginBottom:16,lineHeight:1.6}}>
+          📱 <strong>How it works:</strong> We generate a 6-digit code and send it to your WhatsApp. Once you verify the code, we send a secure reset link to your email.
+        </div>
+        {!waOk&&<div style={{padding:"10px 14px",background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.3)",borderRadius:9,fontSize:13,color:C.amber,marginBottom:14}}>
+          ⚠️ WhatsApp not set up. Go to <strong>Settings → WhatsApp Notifications</strong> to configure your number and CallMeBot API key first.
+        </div>}
+
+        {/* Step indicators */}
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:18}}>
+          {[["1","Send OTP"],["2","Verify Code"]].map(([n,l],i)=>(
+            <React.Fragment key={n}>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div style={{width:24,height:24,borderRadius:"50%",background:otpStep>=parseInt(n)?C.accent:"rgba(100,116,139,.2)",color:otpStep>=parseInt(n)?"#fff":C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,flexShrink:0}}>{n}</div>
+                <span style={{fontSize:12,color:otpStep>=parseInt(n)?C.text:C.faint,fontWeight:otpStep===parseInt(n)?700:400}}>{l}</span>
+              </div>
+              {i<1&&<div style={{flex:1,height:1,background:otpStep>1?C.accent:C.border,margin:"0 4px"}}/>}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {otpStep===1&&(<div>
+          <div style={{textAlign:"center",padding:"24px 16px",marginBottom:16}}>
+            <div style={{fontSize:40,marginBottom:10}}>📲</div>
+            <div style={{fontSize:14,fontWeight:600,color:C.text,marginBottom:6}}>Send OTP to WhatsApp</div>
+            <div style={{fontSize:12,color:C.muted}}>A 6-digit code will be sent to your registered WhatsApp number via CallMeBot.</div>
+          </div>
+          <button onClick={sendOTP} disabled={saving||!waOk||otpCountdown>0} style={{...S.btn(waOk?"#6366f1":"#94a3b8"),width:"100%",padding:12,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+            {saving?<><span className="spin" style={{width:13,height:13,border:"2px solid rgba(255,255,255,.3)",borderTop:"2px solid #fff",borderRadius:"50%",display:"inline-block"}}/>Sending…</>
+            :otpCountdown>0?`⏳ Resend in ${otpCountdown}s`:"📱 Send OTP via WhatsApp"}
+          </button>
+        </div>)}
+
+        {otpStep===2&&(<div>
+          <div style={{marginBottom:16}}>
+            <label style={S.lbl}>6-Digit OTP Code</label>
+            <input type="text" inputMode="numeric" maxLength={6} placeholder="• • • • • •" value={otpInput} onChange={e=>setOtpInput(e.target.value.replace(/\D/g,"").slice(0,6))} onKeyDown={e=>e.key==="Enter"&&otpInput.length===6&&verifyOTPAndReset()} style={{...S.inp,letterSpacing:10,fontSize:22,textAlign:"center",fontWeight:800,paddingTop:12,paddingBottom:12}}/>
+            <div style={{fontSize:11,color:C.faint,marginTop:5,textAlign:"center"}}>Check your WhatsApp — code expires in 10 minutes</div>
+          </div>
+          {/* OTP digit display */}
+          {otpInput.length>0&&<div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:16}}>
+            {Array.from({length:6}).map((_,i)=>(
+              <div key={i} style={{width:38,height:46,borderRadius:8,border:"2px solid "+(i<otpInput.length?C.accent:C.border),background:i<otpInput.length?"rgba(22,163,74,.06)":C.elevated,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:800,color:C.text,transition:"all .15s"}}>
+                {otpInput[i]||""}
+              </div>
+            ))}
+          </div>}
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>{setOtpStep(1);setOtpInput("");reset();}} style={{...S.btn(C.elevated),color:C.muted,border:"1px solid "+C.border,padding:"10px 14px",fontSize:13}}>← Back</button>
+            <button onClick={verifyOTPAndReset} disabled={saving||otpInput.length<6} style={{...S.btn(),flex:1,padding:10,fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+              {saving?<><span className="spin" style={{width:12,height:12,border:"2px solid rgba(255,255,255,.3)",borderTop:"2px solid #fff",borderRadius:"50%",display:"inline-block"}}/>Verifying…</>:"✅ Verify & Send Reset Email"}
+            </button>
+          </div>
+          <div style={{textAlign:"center",marginTop:10}}>
+            <button onClick={()=>{if(otpCountdown===0){setOtpStep(1);setOtpInput("");reset();}else setErr(`Wait ${otpCountdown}s before resending.`);}} style={{background:"none",border:"none",color:otpCountdown>0?C.faint:C.accent,fontSize:12,cursor:otpCountdown>0?"default":"pointer",fontFamily:"inherit"}}>
+              {otpCountdown>0?`Resend available in ${otpCountdown}s`:"Didn't receive it? Resend OTP"}
+            </button>
+          </div>
+        </div>)}
+      </div>)}
+
+      {/* ── RECOVERY TAB ── */}
+      {mode==="recovery"&&(<div>
+        <div style={{textAlign:"center",padding:"20px 16px 16px"}}>
+          <div style={{fontSize:40,marginBottom:10}}>📧</div>
+          <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:6}}>Email Recovery</div>
+          <div style={{fontSize:12,color:C.muted,lineHeight:1.6}}>Enter your email address and we'll send you a secure password reset link. Works even if you've completely forgotten your password.</div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label style={S.lbl}>Email Address</label>
+          <input type="email" value={recoveryEmail} onChange={e=>setRecoveryEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendRecovery()} placeholder="you@example.com" style={S.inp} autoCapitalize="none"/>
+        </div>
+        <button onClick={sendRecovery} disabled={saving} style={{...S.btn("#2563eb"),width:"100%",padding:12,fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",gap:7}}>
+          {saving?<><span className="spin" style={{width:13,height:13,border:"2px solid rgba(255,255,255,.3)",borderTop:"2px solid #fff",borderRadius:"50%",display:"inline-block"}}/>Sending…</>:"📧 Send Password Reset Email"}
+        </button>
+        <div style={{marginTop:14,padding:"10px 14px",background:"rgba(59,130,246,.05)",border:"1px solid rgba(59,130,246,.15)",borderRadius:9,fontSize:12,color:"#3b82f6",lineHeight:1.7}}>
+          💡 <strong>Tips:</strong> Check your spam/junk folder. The link expires in 1 hour. Click it on the same device/browser for best results.
+        </div>
+      </div>)}
     </div>
   </div>);
 }
