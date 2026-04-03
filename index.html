@@ -5756,7 +5756,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
     }catch(e){setErr("Could not send reset email: "+e.message);}
   }
 
-  return(
+  return(<>
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0fdf4 0%,#ecfdf5 40%,#e0f2fe 100%)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
       <div style={{position:"fixed",top:"-10%",right:"-5%",width:400,height:400,borderRadius:"50%",background:"radial-gradient(circle,rgba(22,163,74,.07) 0%,transparent 70%)",pointerEvents:"none"}}/>
       <div style={{position:"fixed",bottom:"-10%",left:"-5%",width:500,height:500,borderRadius:"50%",background:"radial-gradient(circle,rgba(16,185,129,.06) 0%,transparent 70%)",pointerEvents:"none"}}/>
@@ -5854,7 +5854,7 @@ function Login({setUser, pendingApproval, setPendingApproval}){
       </div>
     </div>
     {showForgot&&<ForgotPasswordModal initialEmail={form.email} onClose={()=>setShowForgot(false)}/>}
-  );
+  </>);
 }
 
 /* ─── Rwanda Market ─── */
