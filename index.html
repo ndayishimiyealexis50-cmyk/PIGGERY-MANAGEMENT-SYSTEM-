@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>FarmIQ — AI Pig Farm Management v2.1</title>
+<!-- PWA Meta -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#16a34a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FarmIQ"/>
+<meta name="description" content="AI-powered pig farm management system — track herd, finances, workers and more."/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
 <script>
 window.__loadError=function(name){
   document.getElementById('root').innerHTML='<div style="padding:40px;font-family:sans-serif;color:#dc2626;max-width:520px;margin:60px auto;background:#fff;border-radius:12px;border:1px solid #fee2e2;box-shadow:0 4px 24px rgba(0,0,0,.1)"><h2 style="margin:0 0 10px">⚠️ FarmIQ Failed to Load</h2><p style="color:#374151">Could not load: <strong>'+name+'</strong></p><p style="color:#6b7280;font-size:14px">Check your internet connection and try again.</p><button onclick="location.reload()" style="margin-top:10px;padding:10px 22px;background:#16a34a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">🔄 Retry</button></div>';
@@ -10042,5 +10053,36 @@ function ProfitInsight({pigs,feeds,sales,logs,expenses,incomes,reproductions,sto
 const root=ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App/>);
 </script>
+
+<!-- PWA Service Worker Registration -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js')
+      .then(function(reg){ console.log('FarmIQ SW registered:', reg.scope); })
+      .catch(function(err){ console.log('FarmIQ SW failed:', err); });
+  });
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  setTimeout(() => {
+    const b = document.getElementById('pwa-banner');
+    if(b && deferredPrompt) b.style.display = 'flex';
+  }, 3000);
+});
+window.addEventListener('appinstalled', () => {
+  const b = document.getElementById('pwa-banner');
+  if(b) b.style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
+<div id="pwa-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:12px 20px;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.25);z-index:99999;align-items:center;gap:12px;font-family:'Segoe UI',sans-serif;font-size:14px;max-width:340px;width:90%;">
+  <span style="font-size:22px">🐷</span>
+  <div style="flex:1"><div style="font-weight:700">Install FarmIQ</div><div style="font-size:12px;opacity:.85">Add to home screen for the best experience</div></div>
+  <button onclick="deferredPrompt&&deferredPrompt.prompt();document.getElementById('pwa-banner').style.display='none'" style="background:#fff;color:#16a34a;border:none;border-radius:8px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer">Install</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:16px">✕</button>
+</div>
 </body>
 </html>
