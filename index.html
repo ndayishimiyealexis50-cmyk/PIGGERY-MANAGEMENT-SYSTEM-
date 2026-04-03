@@ -48,7 +48,6 @@ async function ensureUserProfile(firebaseUser, extraFields={}){
   if(!snap.exists){
     const profile = {
       uid: firebaseUser.uid,
-      id: firebaseUser.uid,
       email: firebaseUser.email,
       name: extraFields.name || firebaseUser.displayName || firebaseUser.email.split("@")[0],
       role: isAdmin ? "admin" : "worker",
@@ -62,13 +61,13 @@ async function ensureUserProfile(firebaseUser, extraFields={}){
   const existing = snap.data();
   // Always fix admin profile — force role to lowercase "admin" in Firestore permanently
   if(isAdmin){
-    const fixed = {...existing, uid:firebaseUser.uid, id:firebaseUser.uid, role:"admin", approved:true};
+    const fixed = {...existing, role:"admin", approved:true};
     if(existing.role !== "admin" || !existing.approved){
       await ref.update({role:"admin", approved:true, email: firebaseUser.email||existing.email||null});
     }
     return fixed; // always return fixed regardless
   }
-  return {...existing, uid:existing.uid||firebaseUser.uid, id:existing.uid||firebaseUser.uid};
+  return existing;
 }
 
 async function getUserProfile(uid){
@@ -2239,15 +2238,15 @@ function RemoteWorkPanel({user,sessions,setSessions,messages}){
   const [saved,setSaved]=useState(false);
   const [err,setErr]=useState("");
 
-  const myActive=sessions.filter(s=>(s.workerId===user.uid||s.workerId===user.id)&&s.status==="active");
-  const myAll=sessions.filter(s=>s.workerId===user.uid||s.workerId===user.id).sort((a,b)=>b.startedAt.localeCompare(a.startedAt));
+  const myActive=sessions.filter(s=>s.workerId===user.id&&s.status==="active");
+  const myAll=sessions.filter(s=>s.workerId===user.id).sort((a,b)=>b.startedAt.localeCompare(a.startedAt));
   const currentSession=myActive[0]||null;
 
   function requestSession(){
     setErr("");
     if(!form.computerName||!form.location||!form.purpose) return setErr("Please fill all required fields.");
     const newSess={
-      id:uid(), workerId:user.uid||user.id, workerName:user.name, workerUsername:user.username,
+      id:uid(), workerId:user.id, workerName:user.name, workerUsername:user.username,
       computerName:form.computerName, computerSpec:form.computerSpec||"Not specified",
       location:form.location, purpose:form.purpose, notes:form.notes,
       status:"pending", requestedAt:new Date().toISOString().slice(0,16).replace("T"," "),
@@ -2766,8 +2765,7 @@ function WorkerPigAssessment({user,pigs,assessments,setAssessments}){
   const [confirm,setConfirm]=useState(false);
 
   // Reset rows if pigs list changes
-  const myId=user.uid||user.id;
-  const myHistory=(assessments||[]).filter(a=>a.workerId===myId||a.worker===user.name).slice().reverse();
+  const myHistory=(assessments||[]).filter(a=>a.workerId===user.id).slice().reverse();
   const pending=myHistory.filter(a=>a.approved===false);
   const thisWeek=()=>{const d=new Date();const mon=new Date(d);mon.setDate(d.getDate()-d.getDay()+1);return mon.toISOString().slice(0,10);}
   const weekStart=thisWeek();
@@ -2791,7 +2789,7 @@ function WorkerPigAssessment({user,pigs,assessments,setAssessments}){
       length:r.length?parseFloat(r.length):null,
       bcs:parseInt(r.bcs)||3,
       notes:r.notes||"",
-      workerId:user.uid||user.id,
+      workerId:user.id,
       worker:user.name,
       date:toDay(),
       weekStart,
@@ -2800,16 +2798,14 @@ function WorkerPigAssessment({user,pigs,assessments,setAssessments}){
     }));
     const updated=[...(assessments||[]),...batch];
     setAssessments(updated);
+    fsSet("assessments",updated);
     try{
-      await jbinAppend("assessments",batch[0]); // jbinAppend handles server-fresh merge
-      // Sync remaining batch items
-      for(let i=1;i<batch.length;i++) await jbinAppend("assessments",batch[i]);
+      const data=await getOnlineFarmData()||{};
+      await setOnlineFarmData({...data,assessments:updated});
       setToast({type:"success",message:`✅ ${batch.length} pig assessment${batch.length>1?"s":""} submitted! Awaiting admin approval.`});
       setSaved(true);
     }catch(e){
-      // Fallback: write entire array
-      fsSet("assessments",updated);
-      setToast({type:"error",message:"Saved locally. Sync may be delayed — check internet."});
+      setToast({type:"error",message:"Saved locally. Sync failed — check internet."});
       setSaved(true);
     }
     setSaving(false);
@@ -3598,8 +3594,8 @@ function App(){
       if(freshUsers&&freshUsers.length>0){
         const corrected=freshUsers.map(u=>
           (u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"||u.role?.toLowerCase().trim()==="admin")&&u.name==="Alexis Ndayishimiye"
-            ? {...u, id:u.uid||u.id, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
-            : {...u, id:u.uid||u.id}
+            ? {...u, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
+            : u
         );
         setUsers(corrected);
       }
@@ -3649,8 +3645,8 @@ function App(){
       if(fresh&&fresh.length>0){
         const corrected=fresh.map(u=>
           (u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"||u.role?.toLowerCase().trim()==="admin")&&u.name==="Alexis Ndayishimiye"
-            ? {...u, id:u.uid||u.id, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
-            : {...u, id:u.uid||u.id}
+            ? {...u, role:"admin", approved:true, email:u.email||"ndayishimiyealexis50@gmail.com"}
+            : u
         );
         setUsers(corrected);
       }
@@ -3695,8 +3691,8 @@ function App(){
           // Always enforce correct admin role from Firestore poll — never let stale data flip admin to worker
           const corrected=fresh.map(u=>
             u.email?.toLowerCase()==="ndayishimiyealexis50@gmail.com"
-              ? {...u, id:u.uid||u.id, role:"admin", approved:true}
-              : {...u, id:u.uid||u.id}
+              ? {...u, role:"admin", approved:true}
+              : u
           );
           setUsers(corrected);
         }
@@ -3723,7 +3719,7 @@ function App(){
         const profile = await ensureUserProfile(fbUser);
         // Force role to admin if email matches — never trust Firestore role alone
         const resolvedRole = forceAdmin ? "admin" : (profile?.role?.toLowerCase()||"worker");
-        const resolvedProfile = {...profile, uid:fbUser.uid, id:fbUser.uid, email:fbUser.email, role:resolvedRole, approved: forceAdmin?true:(profile?.approved||false)};
+        const resolvedProfile = {...profile, uid:fbUser.uid, email:fbUser.email, role:resolvedRole, approved: forceAdmin?true:(profile?.approved||false)};
         if(resolvedProfile && (resolvedProfile.approved || forceAdmin)){
           setUser(resolvedProfile);
         } else if(profile&&!profile.approved){
@@ -3902,14 +3898,13 @@ function App(){
     {id:"saleentry",l:"🏷️ Log Sale"},
     {id:"buyentry",l:"🛒 Log Purchase"},
     {id:"pigentry",l:"🐷 Register Pig"},
-    {id:"assessment",l:"📏 Weekly Assessment"+(assessments.filter(a=>(a.workerId===user.uid||a.workerId===user.id)&&a.approved===false).length?" ⏳":"")},
-    {id:"remotework",l:"🖥️ Remote Work"+(sessions.filter(s=>(s.workerId===user.uid||s.workerId===user.id)&&s.status==="active").length?" ●":"")},
+    {id:"assessment",l:"📏 Weekly Assessment"+(assessments.filter(a=>a.workerId===user.id&&a.approved===false).length?" ⏳":"")},
+    {id:"remotework",l:"🖥️ Remote Work"+(sessions.filter(s=>s.workerId===user.id&&s.status==="active").length?" ●":"")},
     {id:"performance",l:"👷 Performance"},
     {id:"weekly",l:"📊 Weekly Report"},
-    {id:"tasks",l:"✅ My Tasks"+(tasks.filter(t=>(t.workerId===user.uid||t.workerId===user.id)&&t.status==="pending").length?" ("+tasks.filter(t=>(t.workerId===user.uid||t.workerId===user.id)&&t.status==="pending").length+")":"")},
+    {id:"tasks",l:"✅ My Tasks"+(tasks.filter(t=>t.workerId===user.id&&t.status==="pending").length?" ("+tasks.filter(t=>t.workerId===user.id&&t.status==="pending").length+")":"")},
     {id:"vaccination",l:"💉 Vaccinations"+(vaccinations.filter(v=>daysDiff(v.nextDue)<=7&&daysDiff(v.nextDue)>=0).length?" 🔔":"")},
     {id:"changepassword",l:"🔒 Change Password"},
-    {id:"workerwa",l:"📱 WhatsApp Setup"+(isWAEnabled()?" 🟢":"")}
   ];
   const nav=isAdmin?adminNav:workerNav;
 
@@ -4029,7 +4024,7 @@ function App(){
       {isAdmin&&page==="profitinsight"&&<ProfitInsight pigs={pigs} feeds={feeds} sales={sales} logs={logs} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock} capital={capital}/>}
       {isAdmin&&page==="feedefficiency"&&<FeedEfficiency pigs={pigs} feeds={feeds} logs={logs} expenses={expenses} sales={sales} incomes={incomes}/>}
       {isAdmin&&page==="pigperformance"&&<PigPerformance pigs={pigs} logs={logs} feeds={feeds} sales={sales} expenses={expenses} incomes={incomes} reproductions={reproductions}/>}
-      {isAdmin&&page==="approvals"&&<ApprovalPanel feeds={feeds} setFeeds={setFeeds} logs={logs} setLogs={setLogs} sales={sales} setSales={setSales} expenses={expenses} setExpenses={setExpenses} pigs={pigs} setPigs={setPigs} capital={capital} setCapital={setCapital} pendingPigs={pendingPigs} setPendingPigs={setPendingPigs} assessments={assessments} setAssessments={setAssessments} pushUndo={pushUndo}/>}
+      {isAdmin&&page==="approvals"&&<ApprovalPanel feeds={feeds} setFeeds={setFeeds} logs={logs} setLogs={setLogs} sales={sales} setSales={setSales} expenses={expenses} setExpenses={setExpenses} pigs={pigs} setPigs={setPigs} capital={capital} setCapital={setCapital} pendingPigs={pendingPigs} setPendingPigs={setPendingPigs} pushUndo={pushUndo}/>}
       {isAdmin&&page==="bigdata"&&<BigData pigs={pigs} feeds={feeds} sales={sales} logs={logs} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock} users={users} capital={capital}/>}
       {isAdmin&&page==="home"&&<AHome pigs={pigs} feeds={feeds} sales={sales} logs={logs} users={users} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock} allData={allData} setPage={setPage} capital={capital} setCapital={setCapital}/>}
       {isAdmin&&page==="ai"&&<AIAdvisor pigs={pigs} feeds={feeds} sales={sales} logs={logs} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock}/>}
@@ -4052,7 +4047,7 @@ function App(){
       {isAdmin&&page==="adminsell"&&<SEntry user={user} pigs={pigs} setPigs={setPigs} sales={sales} setSales={setSales} capital={capital} setCapital={setCapital}/>}
       {isAdmin&&page==="adminfeed"&&<FEntry user={user} pigs={pigs} feeds={feeds} setFeeds={setFeeds} capital={capital} setCapital={setCapital} tasks={tasks} setTasks={setTasks}/>}
       {isAdmin&&page==="adminlog"&&<DEntry user={user} pigs={pigs} logs={logs} setLogs={setLogs} capital={capital} setCapital={setCapital}/>}
-      {!isAdmin&&page==="home"&&<WHome user={user} logs={logs} feeds={feeds} sales={sales} messages={messages}/>}
+      {!isAdmin&&page==="home"&&<WHome user={user} logs={logs} feeds={feeds} sales={sales} messages={messages} assessments={assessments} pendingPigs={pendingPigs} tasks={tasks} expenses={expenses}/>}
       {!isAdmin&&page==="inbox"&&<WorkerInbox messages={messages} setMessages={setMessages} user={user}/>}
       {!isAdmin&&page==="dailyentry"&&<DEntry user={user} pigs={pigs} logs={logs} setLogs={setLogs} capital={capital} setCapital={setCapital}/>}
       {!isAdmin&&page==="feedentry"&&<FEntry user={user} pigs={pigs} feeds={feeds} setFeeds={setFeeds} capital={capital} setCapital={setCapital} tasks={tasks} setTasks={setTasks}/>}
@@ -4061,7 +4056,7 @@ function App(){
       {!isAdmin&&page==="pigentry"&&<WorkerPigEntry user={user} pigs={pigs} setPigs={setPigs} pendingPigs={pendingPigs} setPendingPigs={setPendingPigs}/>}
       {!isAdmin&&page==="remotework"&&<RemoteWorkPanel user={user} sessions={sessions.filter(s=>s.workerId===user.uid||s.workerId===user.id)} setSessions={setSessions} messages={messages}/>}
       {isAdmin&&page==="performance"&&<WorkerPerformance users={users} logs={logs} feeds={feeds} sales={sales}/>}
-      {!isAdmin&&page==="performance"&&<WorkerPerformance users={users.filter(u=>u.uid===user.uid)} logs={logs.filter(l=>l.worker===user.name||(user.uid&&l.workerId===user.uid))} feeds={feeds.filter(f=>f.worker===user.name||(user.uid&&f.workerId===user.uid))} sales={sales.filter(s=>s.worker===user.name||(user.uid&&s.workerId===user.uid))}/>}
+      {!isAdmin&&page==="performance"&&<WorkerPerformance users={users.filter(u=>u.uid===user.uid)} logs={logs.filter(l=>l.worker===user.name)} feeds={feeds.filter(f=>f.worker===user.name)} sales={sales.filter(s=>s.worker===user.name)}/>}
       {isAdmin&&page==="weekly"&&<WeeklyReport pigs={pigs} feeds={feeds} sales={sales} logs={logs} expenses={expenses} incomes={incomes} users={users} stock={stock}/>}
       {!isAdmin&&page==="weekly"&&<WeeklyReport pigs={pigs} feeds={feeds.filter(f=>f.worker===user.name)} sales={sales.filter(s=>s.worker===user.name)} logs={logs.filter(l=>l.worker===user.name)} expenses={expenses} incomes={incomes} users={users.filter(u=>u.uid===user.uid)} stock={stock}/>}
       {isAdmin&&page==="tasks"&&<TaskManager user={user} users={users} tasks={tasks} setTasks={setTasks} feeds={feeds}/>}
@@ -4069,7 +4064,6 @@ function App(){
       {page==="vaccination"&&<VaccinationTracker pigs={pigs} users={users} vaccinations={vaccinations} setVaccinations={setVaccinations} user={user} capital={capital} setCapital={setCapital}/>}
       {page==="changepassword"&&<ChangePassword user={user}/>}
       {isAdmin&&page==="whatsapp"&&<WhatsAppSettings pigs={pigs} feeds={feeds} logs={logs} sales={sales} expenses={expenses} incomes={incomes} reproductions={reproductions} stock={stock}/>}
-      {!isAdmin&&page==="workerwa"&&<WorkerWASetup/>}
       {!isAdmin&&page==="assessment"&&<WorkerPigAssessment user={user} pigs={pigs} assessments={assessments} setAssessments={setAssessments}/>}
       {isAdmin&&page==="assessmenthistory"&&<PigAssessmentHistory pigs={pigs} setPigs={setPigs} assessments={assessments} setAssessments={setAssessments} users={users}/>}
     </div>
@@ -4806,14 +4800,14 @@ function TaskManager({user,users,tasks,setTasks,feeds}){
   const [form,setForm]=useState({title:"",desc:"",workerId:"",priority:"Normal",due:toDay()});
   const [saved,setSaved]=useState(false);
   const [tab,setTab]=useState("all"); // "all" | "chart"
-  const myTasks=isAdmin?tasks:tasks.filter(t=>t.workerId===user.uid||t.workerId===user.id);
+  const myTasks=isAdmin?tasks:tasks.filter(t=>t.workerId===user.id);
 
   // Auto-generate daily feeding tasks
   useAutoFeedingTasks(tasks,setTasks,users,feeds||[]);
 
   async function addTask(){
     if(!form.title||(!isAdmin?false:!form.workerId)) return;
-    const newTask={...form,id:uid(),createdBy:user.name,createdAt:toDay(),status:"pending",workerId:isAdmin?form.workerId:(user.uid||user.id)};
+    const newTask={...form,id:uid(),createdBy:user.name,createdAt:toDay(),status:"pending",workerId:isAdmin?form.workerId:user.id};
     const updated=[...tasks,newTask];
     setTasks(updated);
     fsSet("tasks",updated);
@@ -6790,20 +6784,52 @@ function Workers({users,setUsers,tasks=[]}){
 }
 
 /* ─── Worker Views ─── */
-function WHome({user,logs,feeds,sales,messages}){
+function WHome({user,logs,feeds,sales,messages,assessments,pendingPigs,tasks,expenses}){
   const myId=user.uid||user.id;
   const ml=logs.filter(l=>l.workerId===myId||l.worker===user.name);
   const mf=feeds.filter(f=>f.workerId===myId||f.worker===user.name);
   const ms=sales.filter(s=>s.workerId===myId||s.worker===user.name);
-  const latest=messages[messages.length-1];
+  const myExp=(expenses||[]).filter(e=>e.workerId===myId||e.worker===user.name);
+  const adminMessages=[...messages].reverse();
+  const latest=adminMessages[0]||null;
+
+  // Worker-specific alerts only
+  const myPendingLogs=ml.filter(l=>l.approved===false);
+  const myPendingFeeds=mf.filter(f=>f.approved===false);
+  const myPendingSales=ms.filter(s=>s.approved===false);
+  const myPendingExp=myExp.filter(e=>e.approved===false);
+  const myPendingAssessments=(assessments||[]).filter(a=>(a.workerId===myId||a.worker===user.name)&&a.approved===false);
+  const myPendingPigs=(pendingPigs||[]).filter(p=>(p.submittedBy===myId||p.submittedByName===user.name)&&!p.approved&&!p.rejected);
+  const totalPending=myPendingLogs.length+myPendingFeeds.length+myPendingSales.length+myPendingExp.length+myPendingAssessments.length+myPendingPigs.length;
+
+  const myOverdueTasks=(tasks||[]).filter(t=>(t.workerId===myId||t.workerId===user.id)&&t.status==="pending"&&t.dueDate&&((new Date(t.dueDate)-new Date())/(1000*60*60*24))<0);
+  const myDueTasks=(tasks||[]).filter(t=>(t.workerId===myId||t.workerId===user.id)&&t.status==="pending"&&t.dueDate&&((new Date(t.dueDate)-new Date())/(1000*60*60*24))>=0&&((new Date(t.dueDate)-new Date())/(1000*60*60*24))<=2);
+  const todayDone=ml.some(l=>l.date===toDay());
+
   return(<div>
     <div style={S.h1}>Welcome, {user.name}!</div>
-    {latest&&<div style={{padding:"11px 14px",background:"rgba(22,163,74,.06)",border:"1px solid rgba(22,163,74,.25)",borderRadius:9,marginBottom:14,fontSize:13}}>
+
+    {/* Latest admin message */}
+    {latest&&<div style={{padding:"11px 14px",background:"rgba(22,163,74,.06)",border:"1px solid rgba(22,163,74,.25)",borderRadius:9,marginBottom:10,fontSize:13}}>
       <div style={{fontWeight:600,color:C.accent,marginBottom:3}}>📢 From {latest.from}:</div>
-      <div style={{color:C.text}}>{latest.text}</div>
-      <div style={{fontSize:10,color:C.faint,marginTop:3}}>{latest.date}</div>
+      <div style={{color:C.text,lineHeight:1.6}}>{latest.text}</div>
+      <div style={{fontSize:10,color:C.faint,marginTop:4}}>{latest.date}{latest.time?" · "+latest.time:""}</div>
     </div>}
-    {!ml.some(l=>l.date===toDay())&&<div style={{padding:"11px 14px",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.3)",borderRadius:9,marginBottom:14,color:C.amber,fontSize:13}}>⚠️ Please submit your daily report today!</div>}
+
+    {/* Worker-relevant alerts */}
+    {!todayDone&&<div style={{padding:"10px 14px",background:"rgba(245,158,11,.08)",border:"1px solid rgba(245,158,11,.3)",borderRadius:9,marginBottom:8,color:C.amber,fontSize:13}}>
+      ⚠️ You haven't submitted your daily report today.
+    </div>}
+    {myOverdueTasks.length>0&&<div style={{padding:"10px 14px",background:"rgba(239,68,68,.07)",border:"1px solid rgba(239,68,68,.25)",borderRadius:9,marginBottom:8,color:C.red,fontSize:13}}>
+      🔴 {myOverdueTasks.length} overdue task{myOverdueTasks.length>1?"s":""} — please complete now.
+    </div>}
+    {myDueTasks.length>0&&<div style={{padding:"10px 14px",background:"rgba(245,158,11,.07)",border:"1px solid rgba(245,158,11,.25)",borderRadius:9,marginBottom:8,color:C.amber,fontSize:13}}>
+      ⏰ {myDueTasks.length} task{myDueTasks.length>1?"s":""} due within 2 days.
+    </div>}
+    {totalPending>0&&<div style={{padding:"10px 14px",background:"rgba(37,99,235,.06)",border:"1px solid rgba(37,99,235,.2)",borderRadius:9,marginBottom:10,color:C.blue,fontSize:13}}>
+      ⏳ {totalPending} of your submission{totalPending>1?"s":""} awaiting admin approval.
+    </div>}
+
     <div style={S.g4}>
       {[{l:"Daily Reports",v:ml.length,c:C.accent},{l:"Feeding Logs",v:mf.length,c:C.amber},{l:"Sales",v:ms.length,c:"#10b981"},{l:"My Revenue",v:fmtRWF(ms.reduce((s,l)=>s+(l.total||0),0)),c:C.purple}].map(s=>(
         <div key={s.l} style={S.stat}><div style={S.sl}>{s.l}</div><div style={{...S.sv,color:s.c}}>{s.v}</div></div>
@@ -7102,8 +7128,7 @@ function WorkerPigEntry({user,pigs,setPigs,pendingPigs,setPendingPigs}){
   const [submitted,setSubmitted]=useState(false);
   const [tab,setTab]=useState("form");
 
-  const myId=user.uid||user.id;
-  const myPending=(pendingPigs||[]).filter(p=>p.submittedBy===myId||p.submittedBy===user.id||p.submittedByName===user.name).slice().reverse();
+  const myPending=(pendingPigs||[]).filter(p=>p.submittedBy===user.id).slice().reverse();
 
   function updateBreedOrStage(field,val){
     setForm(f=>{
@@ -7126,7 +7151,7 @@ function WorkerPigEntry({user,pigs,setPigs,pendingPigs,setPendingPigs}){
     const newEntry={
       ...form,tag,
       id:uid(),
-      submittedBy:user.uid||user.id,
+      submittedBy:user.id,
       submittedByName:user.name,
       submittedAt:new Date().toISOString(),
       approved:false,
@@ -7259,9 +7284,8 @@ function DEntry({user,pigs,logs,setLogs,capital,setCapital}){
   const closeToast=useCallback(()=>setToast(null),[]);
 
   // My past submissions
-  const myId=user.uid||user.id;
-  const myLogs=logs.filter(l=>l.workerId===myId||l.worker===user.name).slice().reverse().slice(0,10);
-  const todayDone=logs.some(l=>(l.workerId===myId||l.worker===user.name)&&l.date===toDay());
+  const myLogs=logs.filter(l=>l.workerId===user.id).slice().reverse().slice(0,10);
+  const todayDone=logs.some(l=>l.workerId===user.id&&l.date===toDay());
 
   async function doSave(){
     setConfirm(false);
@@ -7415,7 +7439,7 @@ function FEntry({user,pigs,feeds,setFeeds,capital,setCapital,tasks,setTasks}){
         const today=toDay();
         let taskChanged=false;
         const updatedTasks=tasks.map(t=>{
-          if(t.autoFeed&&(t.workerId===user.uid||t.workerId===user.id)&&t.due===today&&t.status==="pending"){
+          if(t.autoFeed&&t.workerId===user.id&&t.due===today&&t.status==="pending"){
             taskChanged=true;
             return{...t,status:"done",autoCompletedAt:new Date().toISOString()};
           }
@@ -7503,9 +7527,9 @@ function FEntry({user,pigs,feeds,setFeeds,capital,setCapital,tasks,setTasks}){
     </div>
 
     {/* My recent feed logs */}
-    {feeds.filter(f=>f.workerId===(user.uid||user.id)||f.worker===user.name).length>0&&<div style={{marginTop:16}}>
+    {feeds.filter(f=>f.workerId===user.id).length>0&&<div style={{marginTop:16}}>
       <div style={{fontSize:13,fontWeight:700,color:C.text,marginBottom:10}}>📋 My Recent Feed Logs</div>
-      {feeds.filter(f=>f.workerId===(user.uid||user.id)||f.worker===user.name).slice().reverse().slice(0,5).map((f,i)=>(
+      {feeds.filter(f=>f.workerId===user.id).slice().reverse().slice(0,5).map((f,i)=>(
         <div key={i} style={{...S.row,marginBottom:6,borderLeft:"3px solid "+(f.approved===false?C.amber:C.accent)}}>
           <div>
             <div style={{fontWeight:600,fontSize:12}}>{f.feedType} · {f.kg}kg</div>
