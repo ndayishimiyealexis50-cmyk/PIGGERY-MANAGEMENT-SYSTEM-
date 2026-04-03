@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FarmIQ</string>
+    <string name="title_activity_main">FarmIQ</string>
+    <string name="package_name">rw.farmiq.app</string>
+    <string name="custom_url_scheme">rw.farmiq.app</string>
+</resources>
