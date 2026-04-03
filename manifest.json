@@ -1,54 +1,42 @@
+
 {
-  "name": "FarmIQ - Piggery Management",
-  "short_name": "FarmIQ",
-  "description": "Smart pig farm management system for Rwanda",
-  "start_url": "/PIGGERY-MANAGEMENT-SYSTEM-/",
-  "scope": "/PIGGERY-MANAGEMENT-SYSTEM-/",
-  "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2e7d32",
-  "orientation": "portrait",
+  "description": "AI-powered pig farm management system — track herd, finances, workers and more.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "FarmIQ",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "FarmIQ",
+  "start_url": "/",
+  "theme_color": "#16a34a",
   "icons": [
     {
-      "src": "icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
+      "src": "https://ndayishimiyealexis50-cmyk.github.io/icons/icon-192.png",
       "type": "image/png",
-      "purpose": "any maskable"
+      "sizes": "192x192",
+      "isSquare": true,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 192,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": true
     },
     {
-      "src": "icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
+      "src": "https://ndayishimiyealexis50-cmyk.github.io/icons/icon-512.png",
+      "type": "image/png",
       "sizes": "512x512",
-      "type": "image/png"
+      "isSquare": true,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 512,
+      "is512x512": true,
+      "is256x256": false,
+      "is192x192": false
     }
-  ]
+  ],
+  "id": "ndaFayishimiyealexis50-cmyk.github"
 }
