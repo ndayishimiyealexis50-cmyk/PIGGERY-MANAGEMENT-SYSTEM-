@@ -151,8 +151,24 @@ select option{background:#fff;color:#1e293b;}
 .live-pulse{animation:pulse 2s ease-in-out infinite;}
 #pdf-frame{display:none;}
 @media print{body>*{display:none!important;}#pdf-frame{display:block!important;position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;}}
+/* ── Mobile Responsive ── */
+.mob-hamburger{display:none;position:fixed;top:10px;left:10px;z-index:1100;width:42px;height:42px;border-radius:10px;background:#1e3a2f;border:2px solid rgba(74,222,128,.3);color:#4ade80;font-size:20px;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.3);}
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1050;}
+.mob-bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#1e3a2f;border-top:1px solid rgba(255,255,255,.12);z-index:1000;padding:6px 4px 12px;justify-content:space-around;align-items:center;}
+.mob-nav-btn{background:none;border:none;color:rgba(255,255,255,.55);font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 6px;min-width:48px;font-family:inherit;}
+.mob-nav-btn.mob-active{color:#4ade80;}
+.mob-nav-btn .mob-icon{font-size:19px;line-height:1;}
+@media(max-width:768px){
+  .mob-hamburger{display:flex;}
+  .mob-bottom-nav{display:flex;}
+  .mob-side-open{display:flex!important;position:fixed!important;left:0!important;top:0!important;bottom:0!important;z-index:1060!important;width:260px!important;}
+  .mob-side-closed{display:none!important;}
+  .mob-overlay-show{display:block!important;}
+  .mob-main{padding-top:58px!important;padding-bottom:72px!important;}
+  .mob-g1{grid-template-columns:1fr!important;}
+  .mob-g2{grid-template-columns:1fr 1fr!important;}
+}
 /* Enhanced card hover effect */
-
 </style>
 </head>
 <body>
@@ -3765,8 +3781,11 @@ function App(){
   const [pendingApproval,setPendingApproval]=useState(false);
   const [globalRefreshing,setGlobalRefreshing]=useState(false);
   const [lastRefresh,setLastRefresh]=useState("");
-  const [undoStack,setUndoStack]=useState([]); // [{type,data,label,timestamp}]
+  const [undoStack,setUndoStack]=useState([]);
   const [undoToast,setUndoToast]=useState(null);
+  const [sideOpen,setSideOpen]=useState(false);
+  const [isMobile,setIsMobile]=useState(typeof window!=="undefined"&&window.innerWidth<=768);
+  useEffect(()=>{const fn=()=>setIsMobile(window.innerWidth<=768);window.addEventListener("resize",fn);return()=>window.removeEventListener("resize",fn);},[]);
   const undoTimerRef=useRef(null);
   function pushUndo(label,undoFn){
     if(undoTimerRef.current) clearTimeout(undoTimerRef.current);
@@ -4100,7 +4119,11 @@ function App(){
   return(<div style={S.app}>
     {showApiModal&&<ApiKeyModal onClose={()=>setShowApiModal(false)}/>}
     {undoToast&&<UndoToast label={undoToast.label} onUndo={undoToast.onUndo} onClose={clearUndo}/>}
-    <div style={S.side}>
+    {/* Hamburger */}
+    <button className="mob-hamburger" onClick={()=>setSideOpen(o=>!o)}>☰</button>
+    {/* Overlay */}
+    {sideOpen&&<div className={"mob-overlay"+(isMobile?" mob-overlay-show":"")} onClick={()=>setSideOpen(false)}/>}
+    <div style={S.side} className={isMobile?(sideOpen?"mob-side-open":"mob-side-closed"):""}>
       <div style={{padding:"18px 18px 16px",borderBottom:"1px solid rgba(255,255,255,.12)",marginBottom:6,flexShrink:0}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
@@ -4150,7 +4173,7 @@ function App(){
           {getApiKey()?"✦ AI Online · Groq":"🔑 Set Groq Key"}
         </button>
       </div>
-      {nav.map(n=><button key={n.id} style={S.nb(page===n.id)} onClick={()=>setPage(n.id)}>{n.l}</button>)}
+      {nav.map(n=><button key={n.id} style={S.nb(page===n.id)} onClick={()=>{setPage(n.id);if(isMobile)setSideOpen(false);}}>{n.l}</button>)}
       {isAdmin&&(<div style={{padding:"12px 18px",borderTop:"1px solid rgba(255,255,255,.12)",marginTop:6,flexShrink:0}}>
         <div style={{fontSize:9,color:"rgba(255,255,255,.45)",textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>📄 Download Reports</div>
         <PDFBtn label="Full Report" type="farm" getData={()=>allData} icon="📄" color="#2d6a4f"/>
@@ -4163,7 +4186,7 @@ function App(){
         <button style={{...S.btn("#991b1b"),fontSize:12,padding:"6px 13px"}} onClick={async()=>{await _auth.signOut();setUser(null);}}>Sign Out</button>
       </div>
     </div>
-    <div style={S.main}>
+    <div style={S.main} className={isMobile?"mob-main":""}>
       {/* Real-time pending worker alert banner for admin */}
       {isAdmin&&pending.length>0&&page!=="workers"&&(
         <div style={{
@@ -10052,8 +10075,27 @@ function ProfitInsight({pigs,feeds,sales,logs,expenses,incomes,reproductions,sto
         <div style={{marginTop:10,fontSize:12,color:C.accent}}>✅ Break-even reached! ({fSales.length} sales)</div>:
         <div style={{marginTop:10,fontSize:12,color:C.amber}}>⏳ {fSales.length}/{breakEven} sales to break even</div>}
     </div>}
-  </div>);
-}
+  </div>
+  {isMobile&&<nav className="mob-bottom-nav">
+    {[
+      ...(isAdmin?[
+        {id:"overview",icon:"📊",l:"Home"},
+        {id:"pigs",icon:"🐷",l:"Pigs"},
+        {id:"feeding",icon:"🌾",l:"Feed"},
+        {id:"capital",icon:"💰",l:"Capital"},
+      ]:[
+        {id:"overview",icon:"📊",l:"Home"},
+        {id:"pigs",icon:"🐷",l:"Pigs"},
+        {id:"feeding",icon:"🌾",l:"Feed"},
+        {id:"assessment",icon:"📏",l:"Assess"},
+      ]),
+      {id:"__more__",icon:"☰",l:"More"},
+    ].map(n=>n.id==="__more__"
+      ?<button key="more" className="mob-nav-btn" onClick={()=>setSideOpen(true)}><span className="mob-icon">{n.icon}</span><span>{n.l}</span></button>
+      :<button key={n.id} className={"mob-nav-btn"+(page===n.id?" mob-active":"")} onClick={()=>setPage(n.id)}><span className="mob-icon">{n.icon}</span><span>{n.l}</span></button>
+    )}
+  </nav>}
+  </div>);}
 
 const root=ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App/>);
