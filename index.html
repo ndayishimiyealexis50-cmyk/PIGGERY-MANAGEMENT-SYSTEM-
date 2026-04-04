@@ -3918,6 +3918,23 @@ function App(){
       }catch(e){}
     },8000);
 
+    // Handle Google redirect result — must be called on every page load.
+    // When the user returns from Google sign-in (signInWithRedirect),
+    // this resolves the pending auth result BEFORE onAuthStateChanged fires.
+    // If there's no pending redirect, result.user is null and we do nothing.
+    _auth.getRedirectResult().then(async result=>{
+      if(result&&result.user){
+        await ensureUserProfile(result.user);
+        // onAuthStateChanged below will fire automatically and call setUser
+      }
+    }).catch(e=>{
+      // Swallow "no-auth-event" (normal when no redirect is pending).
+      // Log anything else so we can debug if needed.
+      if(e.code!=="auth/no-auth-event"){
+        console.warn("getRedirectResult error:",e.code,e.message);
+      }
+    });
+
     // Listen for Firebase auth state — fires on page load AND after Google sign-in
     const unsubAuth = _auth.onAuthStateChanged(async fbUser=>{
       if(fbUser){
@@ -5792,18 +5809,24 @@ function Login({setUser, pendingApproval, setPendingApproval}){
   async function googleSignIn(){
     setErr("");setGLoading(true);
     try{
-      const result = await _auth.signInWithPopup(_googleProvider);
-      await handleFirebaseUser(result.user);
+      // Use redirect (not popup) — popup opens as a new tab on mobile Chrome,
+      // which breaks Firebase sessionStorage across origins (storage partitioning).
+      // Redirect keeps everything in the same window/origin, so no state is lost.
+      await _auth.signInWithRedirect(_googleProvider);
+      // Page navigates away — nothing executes after this line.
+      // Result is handled by getRedirectResult() in the App init useEffect.
     }catch(e){
       const msg=
         e.code==="auth/unauthorized-domain"?"This domain is not authorized. Add it in Firebase → Authentication → Authorized Domains.":
-        e.code==="auth/popup-blocked"?"Popup blocked. Please allow popups for this site and try again.":
-        e.code==="auth/popup-closed-by-user"?"":
-        e.code==="auth/cancelled-popup-request"?"":
+        e.code==="auth/network-request-failed"?"No internet connection. Try email/password sign-in instead.":
+        e.code==="auth/too-many-requests"?"Too many attempts. Please wait and try again.":
         "Google sign-in failed: "+e.message;
       if(msg) setErr(msg);
+      setGLoading(false);
     }
-    setGLoading(false);
+    // Note: setGLoading(false) is intentionally omitted on success —
+    // the page will navigate away, and on return the login state is
+    // resolved by onAuthStateChanged.
   }
 
   async function forgotPassword(){
