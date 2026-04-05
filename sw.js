@@ -1,5 +1,5 @@
 /* FarmIQ Service Worker — Offline Support */
-const CACHE = 'farmiq-v1';
+const CACHE = 'farmiq-v2';
 
 const PRECACHE = [
   './',
@@ -7,6 +7,13 @@ const PRECACHE = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './js/globals.js',
+  './js/pdf-styles.js',
+  './js/ai-components.js',
+  './js/farm-modules.js',
+  './js/salary-manager.js',
+  './js/admin-views.js',
+  './js/worker-views.js',
   'https://unpkg.com/react@18.3.1/umd/react.production.min.js',
   'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',
   'https://unpkg.com/@babel/standalone@7.24.4/babel.min.js',
