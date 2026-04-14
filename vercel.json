@@ -1,0 +1,1 @@
+{"buildCommand":"cd piggery-react && npm run build","outputDirectory":"piggery-react/dist","installCommand":"cd piggery-react && npm install"}
