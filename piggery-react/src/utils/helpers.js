@@ -1,0 +1,10 @@
+export const uid = () => crypto.randomUUID();
+export const rwandaISO = "RW";
+export const toDay = () => new Date().toISOString().split('T')[0];
+export const jbinAppend = (arr, item) => [...arr, item];
+export const calcPnL = () => {};
+export const calcCapitalBalance = () => {};
+export const getMarketPrice = () => {};
+export const getMarketSurveys = () => {};
+export const daysDiff = (a, b) => Math.abs(new Date(a) - new Date(b)) / 86400000;
+export const fmtRWF = (n) => `RWF ${Number(n).toLocaleString()}`;
