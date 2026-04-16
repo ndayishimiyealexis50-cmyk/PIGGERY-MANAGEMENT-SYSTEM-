@@ -18,7 +18,7 @@ import {
   fmtRWF,
   toDay,
 } from "../utils/helpers";
-import { getOnlineFarmData, FS_FARM_DOC } from "../firebase";  // adjust as needed
+import { getOnlineFarmData, FS_FARM_DOC } from "../lib/firebase";  // adjust as needed
 
 // ─── Design Tokens (mirrors FarmIQ C / S constants) ─────────────────────────
 const C = {
