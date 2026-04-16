@@ -4,7 +4,10 @@ import Login from "./pages/Login";
 import AHome from "./pages/AHome";
 
 function ProtectedRoute({ children }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
   return user ? children : <Navigate to="/login" />;
 }
 
