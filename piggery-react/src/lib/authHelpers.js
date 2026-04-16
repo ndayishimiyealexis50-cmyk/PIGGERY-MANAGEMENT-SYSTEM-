@@ -4,7 +4,7 @@ import { db } from "./firebase";
 export const _profileCache = {};
 
 export const isAdminEmail = (email) => {
-  const admins = ["your-admin@gmail.com"]; // replace with your admin email
+  const admins = ["ndayishimiyealexis50@gmail.com"];
   return admins.includes(email);
 };
 
