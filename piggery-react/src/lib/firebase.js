@@ -1,12 +1,6 @@
-// src/lib/firebase.js
-// Replaces: §5 FIREBASE CONFIG + inline firebase.initializeApp() in index.html
-//
-// ⚠️  Move these values to .env in production:
-//     VITE_FIREBASE_API_KEY=...  etc.
-//     Then reference as import.meta.env.VITE_FIREBASE_API_KEY
-
+// src/firebase.js
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -19,7 +13,20 @@ const firebaseConfig = {
   measurementId:     "G-064719MRR4",
 };
 
-const app            = initializeApp(firebaseConfig);
-export const db      = getFirestore(app);
-export const auth    = getAuth(app);
+const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+export const FS_FARM_DOC = "farmData";
+
+export async function getOnlineFarmData(db, farmId) {
+  try {
+    const ref = doc(db, FS_FARM_DOC, farmId);
+    const snap = await getDoc(ref);
+    return snap.exists() ? snap.data() : null;
+  } catch (e) {
+    console.error("getOnlineFarmData error:", e);
+    return null;
+  }
+}
