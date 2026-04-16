@@ -44,7 +44,6 @@ export const fmtNum = (n) => Math.round(n || 0).toLocaleString();
 
 /**
  * Capital balance = initial + all approved income − all approved expenses.
- * 100% derived from actual data arrays; zero dependency on capital.transactions.
  */
 export function calcCapitalBalance(capital, feeds, sales, expenses, incomes) {
   const ok = (x) => x.approved !== false;
@@ -58,7 +57,6 @@ export function calcCapitalBalance(capital, feeds, sales, expenses, incomes) {
 
 /**
  * P&L — same source of truth as calcCapitalBalance.
- * Only counts records with approved !== false  (undefined = approved, legacy compat).
  */
 export function calcPnL(capital, feeds, sales, expenses, incomes) {
   const ok = (x) => x.approved !== false;
@@ -73,7 +71,6 @@ export function calcPnL(capital, feeds, sales, expenses, incomes) {
 
 /**
  * Add a capital transaction with dedup guard via refId.
- * Returns the new (or existing duplicate) transaction object.
  */
 export function capitalTx(capital, setCapital, { type, category, amount, description, date, refId }) {
   const amt = Math.round(parseFloat(amount) || 0);
@@ -96,7 +93,6 @@ export function capitalTx(capital, setCapital, { type, category, amount, descrip
 
 /**
  * Remove capital transactions whose refId no longer maps to a real record.
- * Call after any delete to keep capital.transactions clean.
  */
 export function purgeOrphanedCapitalTx(capital, setCapital, feeds, sales, expenses, logs) {
   const validFeedIds = new Set((feeds    || []).map((x) => 'feed_'      + x.id));
@@ -118,8 +114,8 @@ export function purgeOrphanedCapitalTx(capital, setCapital, feeds, sales, expens
 
 // ── Constants ──────────────────────────────────────────────────
 
-export const GESTATION  = 114; // days
-export const HEAT_CYCLE = 21;  // days
+export const GESTATION  = 114;
+export const HEAT_CYCLE = 21;
 
 export const EXPENSE_CATS = [
   'Feed Purchase', 'Pig Purchase', 'Veterinary', 'Medicine',
@@ -130,3 +126,13 @@ export const EXPENSE_CATS = [
 export const INCOME_CATS = [
   'Pig Sale', 'Piglet Sale', 'Manure Sale', 'Other Income',
 ];
+
+// ── Market Helpers ─────────────────────────────────────────────
+
+export function getMarketPrice() {
+  return null;
+}
+
+export function getMarketSurveys() {
+  return [];
+}
