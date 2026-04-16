@@ -1,17 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
-
-function Dashboard() {
-  const { user, logout } = useAuth();
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>Welcome, {user?.displayName} 🐷</h2>
-      <p>{user?.email}</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
-}
+import AHome from "./pages/AHome";
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -25,7 +15,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
+            <ProtectedRoute><AHome /></ProtectedRoute>
           } />
         </Routes>
       </BrowserRouter>
