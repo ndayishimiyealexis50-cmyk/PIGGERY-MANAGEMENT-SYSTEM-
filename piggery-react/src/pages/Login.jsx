@@ -1,6 +1,7 @@
-// src/pages/Login.jsx
+// src/pages/login.jsx
 
 import { useState } from "react";
+import { Navigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -10,13 +11,17 @@ import { auth } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
-  const { loginWithGoogle } = useAuth();
-  const [tab, setTab] = useState("signin"); // "signin" | "register"
+  const { loginWithGoogle, user, loading: authLoading } = useAuth();
+  const [tab, setTab] = useState("signin");
   const [form, setForm] = useState({ email: "", password: "", confirm: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [ok, setOk] = useState("");
+
+  // ✅ Auth guard
+  if (authLoading) return null;
+  if (user) return <Navigate to="/" replace />;
 
   const handle = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
@@ -29,23 +34,9 @@ export default function Login() {
     if (form.password.length < 6)
       return setErr("Password must be at least 6 characters.");
     setLoading(true);
-
-    let didSucceed = false;
-    const loginTimeout = setTimeout(() => {
-      if (!didSucceed) {
-        setLoading(false);
-        setErr("Sign in is taking too long. Check your internet connection and try again.");
-      }
-    }, 20000);
-
     try {
-      // ✅ v9 modular syntax — FIXED
       await signInWithEmailAndPassword(auth, form.email.trim(), form.password);
-      didSucceed = true;
-      clearTimeout(loginTimeout);
-      return; // AuthContext will handle redirect
     } catch (e) {
-      clearTimeout(loginTimeout);
       setErr(
         e.code === "auth/user-not-found" ||
         e.code === "auth/wrong-password" ||
@@ -59,8 +50,9 @@ export default function Login() {
           ? "No internet connection. Check your network and try again."
           : "Sign in failed: " + e.message
       );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   // ── Register ─────────────────────────────────────────────────
@@ -74,9 +66,7 @@ export default function Login() {
       return setErr("Passwords do not match.");
     setLoading(true);
     try {
-      // ✅ v9 modular syntax
       await createUserWithEmailAndPassword(auth, form.email.trim(), form.password);
-      return; // AuthContext will handle redirect
     } catch (e) {
       setErr(
         e.code === "auth/email-already-in-use"
@@ -87,8 +77,9 @@ export default function Login() {
           ? "No internet connection. Check your network and try again."
           : "Registration failed: " + e.message
       );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   // ── Forgot Password ──────────────────────────────────────────
