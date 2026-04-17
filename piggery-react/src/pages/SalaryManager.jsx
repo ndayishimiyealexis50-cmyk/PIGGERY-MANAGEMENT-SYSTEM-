@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { C, S } from "../styles";
+import { C, S } from "../styles/theme.js";
 import { uid, toDay, fmtRWF } from "../utils";
 import { fsSet, _db } from "../firebase";
 import { capitalTx } from "../utils/capital";
