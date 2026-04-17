@@ -2,7 +2,7 @@
 // FarmIQ — KPI Card Component
 // Migrated from §17 of index_migration_to_vite_react.html
 // ════════════════════════════════════════════════════════════════
-import { C } from '../styles/constants';
+import { C } from '../styles/theme';
 
 /**
  * Single KPI stat card with count-up animation class.
