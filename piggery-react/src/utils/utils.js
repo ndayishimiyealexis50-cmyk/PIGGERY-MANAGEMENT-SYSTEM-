@@ -37,3 +37,11 @@ export function daysDiff(dateStr) {
   if (!dateStr) return 999;
   return Math.round((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
 }
+
+export async function getBusinessProfile() {
+  const { db } = await import('../lib/firebase');
+  const { doc, getDoc } = await import('firebase/firestore');
+  const ref = doc(db, 'business', 'profile');
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data() : null;
+}

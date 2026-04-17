@@ -2,9 +2,9 @@
 // §23b — Admin creates & manages employment contracts per worker
 
 import React, { useState, useEffect } from 'react'
-import { C, S } from '../../utils/constants'
-import { toDay } from '../../utils/helpers'
-import { getBusinessProfile, downloadContractPDF } from '../../utils/pdf'
+import { C, S } from '../utils/constants'
+import { toDay } from '../utils/helpers'
+import { getBusinessProfile, downloadContractPDF } from '../utils/pdf'
 import { _db } from '../../firebase/config'
 
 const DUTY_DEFAULTS = {

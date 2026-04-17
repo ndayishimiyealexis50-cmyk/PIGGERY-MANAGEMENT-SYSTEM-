@@ -2,10 +2,10 @@
 // §23 — Password & Security (password change, OTP, email recovery)
 
 import React, { useState, useEffect } from 'react'
-import { C, S } from '../../utils/constants'
-import { isWAEnabled, sendWhatsApp } from '../../utils/farm'
+import { C, S } from '../utils/constants'
+import { isWAEnabled, sendWhatsApp } from '../utils/farm'
 import { _auth } from '../../firebase/config'
-import { generateOTP, storeOTP, verifyOTP } from '../../utils/otp'
+import { generateOTP, storeOTP, verifyOTP } from '../utils/otp'
 
 export default function ChangePassword({ user }) {
   const [mode, setMode] = useState('password')

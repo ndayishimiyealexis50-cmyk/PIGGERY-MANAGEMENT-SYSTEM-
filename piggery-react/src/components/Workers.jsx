@@ -2,7 +2,7 @@
 // §23 — Admin worker management: approve, assign roles, remove, restore
 
 import React, { useState, useEffect } from 'react'
-import { C, S } from '../../utils/constants'
+import { C, S } from '../utils/constants'
 import { _db, _profileCache } from '../../firebase/config'
 import { getAllUserProfiles } from '../../firebase/db'
 import WorkerTaskChart from '../WorkerTaskChart'

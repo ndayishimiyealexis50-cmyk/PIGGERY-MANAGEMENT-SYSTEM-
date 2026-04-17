@@ -2,8 +2,8 @@
 // §23a — Worker views & prints their own employment contract
 
 import React, { useState, useEffect } from 'react'
-import { C, S } from '../../utils/constants'
-import { getBusinessProfile, downloadContractPDF } from '../../utils/pdf'
+import { C, S } from '../utils/constants'
+import { getBusinessProfile, downloadContractPDF } from '../utils/pdf'
 import { _db } from '../../firebase/config'
 
 const ctypeLabel = { permanent: 'Permanent Employment', fixed: 'Fixed-Term Contract', probation: 'Probationary Contract' }

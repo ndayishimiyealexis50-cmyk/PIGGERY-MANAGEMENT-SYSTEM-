@@ -7,9 +7,9 @@
 // full AI layer is migrated).
 // ════════════════════════════════════════════════════════════════
 import { useState, useEffect } from 'react';
-import { C, S } from '../../styles/constants';
-import { fmtRWF, toDay } from '../../utils/helpers';
-import { getMarketPrice } from '../../utils/market';
+import { C, S } from '../styles/constants';
+import { fmtRWF, toDay } from '../utils/helpers';
+import { getMarketPrice } from '../utils/market';
 
 // ── Temporary shims ────────────────────────────────────────────
 // TODO: replace these with proper imports once the AI layer and

@@ -22,7 +22,7 @@ import {
 // ── Firestore import — choose ONE depending on your SDK version ───────────────
 // Firestore v9 modular (recommended):
 import { setDoc } from "firebase/firestore";
-import { getOnlineFarmData, FS_FARM_DOC } from "../lib/firebase";
+import { getOnlineFarmData, FS_FARM_DOC } from "../lib/firestore";
 // Firestore v8 (legacy): just keep the original import above and use FS_FARM_DOC.set(...)
 
 // ─── Design Tokens (mirrors FarmIQ C / S constants) ─────────────────────────

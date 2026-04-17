@@ -16,9 +16,9 @@ import { useState } from 'react';
 import { C, S } from '../styles/theme';
 import { uid, toDay, fmtRWF } from '../lib/utils';
 import { fsSet } from '../lib/firestore';
-import { capitalTx } from '../lib/capitalUtils';
-import { FX } from '../lib/fx';
-import { autoAddToStock, autoRegisterPigsFromPurchase, genPigTag } from '../lib/pigUtils';
+import { capitalTx } from '../lib/utils';
+import { FX } from '../utils/fx';
+import { autoAddToStock, autoRegisterPigsFromPurchase, genPigTag } from '../utils/pigUtils';
 
 export default function ApprovalPanel({
   feeds, setFeeds, logs, setLogs, sales, setSales,

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { C, S, toDay } from "../utils";
-import { getBusinessProfile } from "../utils";
+import { fmtRWF, fmtNum, toDay } from "../utils/utils";
+import { getBusinessProfile } from "../utils/utils";
 
 // ─── PDF Download ───
 function buildPDFHTML(type, data) {

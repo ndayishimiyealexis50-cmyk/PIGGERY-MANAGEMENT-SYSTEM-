@@ -1,0 +1,18 @@
+const _db = null; // import { db as _db } from "../firebase";
+import { C, S } from "../styles";
+import { C, S } from "../styles/theme";
+import { C, S } from "../styles/theme.js";
+import { C, S, toDay } from "../utils";
+import { _db, _profileCache, getAllUserProfiles } from "../firebase";
+import { calcCapitalBalance } from "../utils/capitalUtils";
+import { capitalTx } from "../utils/capital";
+import { capitalTx } from "../utils/capitalUtils.js";
+import { db } from "../firebase/firestore"; // adjust path if needed
+import { fsSet } from "../firebase";
+import { fsSet, _db } from "../lib/firebase.js";
+import { getBusinessProfile } from "../utils";
+import { getOnlineFarmData, FS_FARM_DOC } from "../lib/firebase";
+import { uid, toDay, fmtRWF } from "../lib/utils";
+import { uid, toDay, fmtRWF } from "../lib/utils.js";
+import { uid, toDay, fmtRWF } from "../utils";
+} from "../utils/helpers";

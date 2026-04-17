@@ -4,7 +4,7 @@
 // as the original globals) but do not import any React hooks themselves.
 
 import { uid, toDay } from './utils';
-import { fsSet } from './firestore';
+import { fsSet } from '../lib/firestore';
 
 // ── Pig tag generation ────────────────────────────────────────────
 
