@@ -119,3 +119,5 @@ export const S = {
     transition: "all .15s",
   }),
 };
+
+export default function WorkerPigAssessment() { return null; }

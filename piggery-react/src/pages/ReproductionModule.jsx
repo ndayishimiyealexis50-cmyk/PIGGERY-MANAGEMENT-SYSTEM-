@@ -1,9 +1,11 @@
+import { fsSet } from '../lib/firestore';
+import { getOnlineFarmData, setOnlineFarmData } from '../utils/storage';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import {
   uid, toDay, addDays, daysDiff, fmtRWF, fmtNum,
-  fsSet, capitalTx, GESTATION,
-  getOnlineFarmData, setOnlineFarmData,
+  capitalTx, GESTATION,
+  
 } from '../utils/helpers';
 import AIPrediction from './AIPrediction';
 

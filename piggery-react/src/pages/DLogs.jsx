@@ -1,6 +1,7 @@
+import { fsSet } from '../lib/firestore';
 import React from 'react';
 import { C, S } from '../utils/constants';
-import { fsSet, isAdminUser } from '../utils/helpers';
+import { isAdminUser } from '../utils/helpers';
 import AIPrediction from './AIPrediction';
 import PDFBtn from './PDFBtn';
 

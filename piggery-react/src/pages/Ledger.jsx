@@ -1,7 +1,8 @@
+import { fsSet } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import {
-  uid, toDay, fmtRWF, fsSet, capitalTx,
+  uid, toDay, fmtRWF, capitalTx,
   calcPnL, EXPENSE_CATS, INCOME_CATS,
 } from '../utils/helpers';
 

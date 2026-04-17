@@ -2,7 +2,7 @@ import { useState } from "react";
 import { C, S } from "../styles/theme";
 import { uid, toDay, fmtRWF } from "../lib/utils";
 import { calcCapitalBalance } from "../utils/capitalUtils";
-import { KPI } from "./KPI";
+import KPI from "./KPI";
 
 export default function CapitalManager({ capital, setCapital, feeds, sales, expenses, incomes, pigs, user }) {
   const isAdmin = user?.role?.toLowerCase() === "admin";

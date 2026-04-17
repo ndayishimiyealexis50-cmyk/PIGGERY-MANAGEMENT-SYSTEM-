@@ -14,9 +14,9 @@
 
 import { useState } from 'react';
 import { C, S } from '../styles/theme';
-import { uid, toDay, fmtRWF } from '../lib/utils';
+import { uid, toDay, fmtRWF } from '../utils/helpers';
 import { fsSet } from '../lib/firestore';
-import { capitalTx } from '../lib/utils';
+import { capitalTx } from '../utils/helpers';
 import { FX } from '../utils/fx';
 import { autoAddToStock, autoRegisterPigsFromPurchase, genPigTag } from '../utils/pigUtils';
 

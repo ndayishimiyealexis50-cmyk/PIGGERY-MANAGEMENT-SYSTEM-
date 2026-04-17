@@ -24,3 +24,6 @@ export const jbinAppend = async (binId, apiKey, data) => {
     body: JSON.stringify([...existing, data])
   });
 };
+
+export const fmtRWF = (n) => 'RWF ' + Number(n || 0).toLocaleString();
+export { addDays, daysDiff, fmtNum } from '../utils/helpers';

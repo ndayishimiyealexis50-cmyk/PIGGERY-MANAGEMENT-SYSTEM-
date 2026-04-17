@@ -1,8 +1,9 @@
+import { fsSet } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import {
   uid, toDay, fmtRWF, fmtNum,
-  fsSet, capitalTx, genPigTag, getMarketPrice,
+  capitalTx, genPigTag, getMarketPrice,
 } from '../utils/helpers';
 import { FX } from '../utils/fx';
 import PigCard from './PigCard';

@@ -1,3 +1,4 @@
+import { setOnlineFarmData } from '../utils/storage';
 // pages/AHome.jsx
 // ─── Admin Dashboard — Farm Overview ─────────────────────────────────────────
 // Port of FarmIQ §17 AHome component to Vite + React.
@@ -5,7 +6,7 @@
 // REQUIRED IMPORTS (adjust paths to match your project layout):
 //   src/utils/helpers.js   — calcPnL, calcCapitalBalance, getMarketPrice,
 //                            getMarketSurveys, daysDiff, fmtRWF, toDay
-//   src/firebase.js        — db (Firestore), getOnlineFarmData, FS_FARM_DOC
+//   src/firebase.js        — db (Firestore), FS_FARM_DOC
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState } from "react";
@@ -22,7 +23,7 @@ import {
 // ── Firestore import — choose ONE depending on your SDK version ───────────────
 // Firestore v9 modular (recommended):
 import { setDoc } from "firebase/firestore";
-import { getOnlineFarmData, FS_FARM_DOC } from "../lib/firestore";
+import { FS_FARM_DOC } from "../lib/firestore";
 // Firestore v8 (legacy): just keep the original import above and use FS_FARM_DOC.set(...)
 
 // ─── Design Tokens (mirrors FarmIQ C / S constants) ─────────────────────────

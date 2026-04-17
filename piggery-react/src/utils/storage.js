@@ -20,6 +20,18 @@
  * @param {Object} data - Partial farm document to merge/overwrite.
  * @returns {Promise<void>}
  */
+export async function getOnlineFarmData() {
+  try {
+    if (window.FS_FARM_DOC) {
+      const snap = await window.FS_FARM_DOC.get();
+      return snap.exists ? snap.data() : {};
+    }
+  } catch (e) {
+    console.warn("[FarmIQ] getOnlineFarmData failed:", e);
+  }
+  return {};
+}
+
 export async function setOnlineFarmData(data) {
   // 1. Update in-memory cache immediately so the UI stays responsive
   if (window._latestFarmData) {

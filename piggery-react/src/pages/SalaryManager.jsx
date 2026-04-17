@@ -1,7 +1,8 @@
+import { fsSet } from '../lib/firestore';
 import { useState, useEffect } from "react";
 import { C, S } from "../styles/theme.js";
 import { uid, toDay, fmtRWF } from "../lib/utils.js";
-import { fsSet, _db } from "../lib/firebase.js";
+import { db } from "../lib/firebase.js";
 import { capitalTx } from "../utils/capitalUtils.js";
 
 const SALARY_METHODS  = ["Mobile Money (MoMo)", "Cash", "Bank Transfer", "Cheque"];
@@ -186,7 +187,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
       setForm(f => ({ ...f, workerId: wid, workerName: w?.name || "", amount: String(config.grossSalary), deductions: autoDeductions, bonuses: autoBonuses }));
     } else {
       setForm(f => ({ ...f, workerId: wid, workerName: w?.name || "", amount: "", deductions: autoDeductions, bonuses: autoBonuses }));
-      _db.collection("contracts").where("workerId", "==", wid).limit(1).get()
+      db.collection("contracts").where("workerId", "==", wid).limit(1).get()
         .then(snap => { if (!snap.empty) { const sal = String(snap.docs[0].data().salary || ""); if (sal) setForm(f => ({ ...f, amount: sal })); } })
         .catch(() => {});
     }
@@ -474,7 +475,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
                 const existing = getWorkerConfig(wid);
                 setConfigForm(f => ({ ...f, workerId: wid, grossSalary: existing ? String(existing.grossSalary) : "", notes: existing?.notes || "" }));
                 if (!existing && wid) {
-                  _db.collection("contracts").where("workerId", "==", wid).limit(1).get()
+                  db.collection("contracts").where("workerId", "==", wid).limit(1).get()
                     .then(snap => { if (!snap.empty) { const sal = String(snap.docs[0].data().salary || ""); if (sal) setConfigForm(f => ({ ...f, grossSalary: sal })); } })
                     .catch(() => {});
                 }

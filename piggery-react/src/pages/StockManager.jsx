@@ -1,6 +1,7 @@
+import { fsSet } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
-import { uid, toDay, fmtRWF, fmtNum, fsSet, capitalTx } from '../utils/helpers';
+import { uid, toDay, fmtRWF, fmtNum, capitalTx } from '../utils/helpers';
 
 export default function StockManager({ stock, setStock, feeds, pigs, capital, setCapital }) {
   const [tab, setTab] = useState('inventory');
