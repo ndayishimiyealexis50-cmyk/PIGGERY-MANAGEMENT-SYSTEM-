@@ -14,8 +14,9 @@ import { useState } from 'react';
 import { C, S } from '../styles/theme';
 import { uid, toDay, fmtNum, addDays, daysDiff } from '../lib/utils';
 import { fsSet, jbinAppend } from '../lib/firestore';
-import { isAdminUser } from '../lib/constants';
 import { capitalTx } from '../lib/capitalUtils';
+
+const isAdminUser = (u) => u?.role === 'admin' || u?.isAdmin === true;
 
 const VACCINES = ['CSF Vaccine', 'FMD Vaccine', 'Ivermectin', 'Dewormer', 'Vitamin B12', 'Other'];
 
@@ -178,4 +179,3 @@ export default function VaccinationTracker({
       </div>
     </div>
   );
-}
