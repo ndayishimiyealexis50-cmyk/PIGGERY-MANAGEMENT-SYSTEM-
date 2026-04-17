@@ -21,7 +21,7 @@
 
 import { useState } from 'react';
 import { C, S } from '../utils/constants';
-import { fsSet, getOnlineFarmData, setOnlineFarmData } from '../lib/firestore';
+import { fsSet, getOnlineFarmData, setOnlineFarmData } from '../utils/storage';
 import { toDay } from '../utils/helpers';
 import Toast from '../components/Toast';
 
