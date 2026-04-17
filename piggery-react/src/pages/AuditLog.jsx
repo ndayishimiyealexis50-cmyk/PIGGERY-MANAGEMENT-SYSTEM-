@@ -23,7 +23,7 @@
 // wherever a log entry is needed.
 // ════════════════════════════════════════════════════════════════
 import { useState } from 'react';
-import { C, S } from '../styles/constants';
+import { C, S } from '../utils/constants';
 import { setOnlineFarmData } from '../utils/storage';
 
 // ── Config ────────────────────────────────────────────────────
