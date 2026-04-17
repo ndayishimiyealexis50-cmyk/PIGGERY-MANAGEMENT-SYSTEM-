@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { C, S } from "../styles/theme.js";
 import { uid, toDay, fmtRWF } from "../lib/utils.js";
 import { fsSet, _db } from "../lib/firebase.js";
-import { capitalTx } from "../utils/capital";
+import { capitalTx } from "../utils/capitalUtils.js";
 
 const SALARY_METHODS  = ["Mobile Money (MoMo)", "Cash", "Bank Transfer", "Cheque"];
 const SALARY_PERIODS  = ["Monthly", "Bi-Weekly", "Weekly"];
