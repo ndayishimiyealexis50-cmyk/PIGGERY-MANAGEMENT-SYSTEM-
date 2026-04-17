@@ -24,7 +24,7 @@
 // ════════════════════════════════════════════════════════════════
 import { useState } from 'react';
 import { C, S } from '../styles/constants';
-import { setOnlineFarmData } from '../firebase/storage';
+import { setOnlineFarmData } from '../utils/storage';
 
 // ── Config ────────────────────────────────────────────────────
 const ACTIONS = ['all', 'login', 'logout', 'add', 'edit', 'delete', 'approve', 'reject', 'reset'];
