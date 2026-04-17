@@ -20,7 +20,7 @@
  */
 
 import { useState } from 'react';
-import { C, S } from '../styles/constants';
+import { C, S } from '../src/Utils/constants';
 import { fsSet, getOnlineFarmData, setOnlineFarmData } from '../firebase/storage';
 import { toDay } from '../utils/helpers';
 import Toast from '../components/Toast';
