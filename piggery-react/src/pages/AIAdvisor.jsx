@@ -5,11 +5,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { C, S } from '../styles/theme';
 import { fmtRWF } from '../utils/formatters';
-import { toDay, getMarketPrice } from '../utils/helpers';
-import { askAI, getApiKey } from '../utils/ai';
-import ApiKeyModal   from '../components/ApiKeyModal';
-import AIStatusPill  from '../components/AIStatusPill';
-import AIErrorMsg    from '../components/AIErrorMsg';
+import { toDay, getMarketPrice } from '../utils/helpers'
 
 export default function AIAdvisor({ pigs, feeds, sales, logs, expenses, incomes, reproductions, stock }) {
   const [q,            setQ]            = useState('');
