@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { C, S } from "../styles/theme.js";
-import { uid, toDay, fmtRWF } from "../utils";
-import { fsSet, _db } from "../firebase";
+import { uid, toDay, fmtRWF } from "../lib/utils.js";
+import { fsSet, _db } from "../lib/firebase.js";
 import { capitalTx } from "../utils/capital";
 
 const SALARY_METHODS  = ["Mobile Money (MoMo)", "Cash", "Bank Transfer", "Cheque"];
