@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 // src/components/worker/WorkerContractManager.jsx
 // §23b — Admin creates & manages employment contracts per worker
 

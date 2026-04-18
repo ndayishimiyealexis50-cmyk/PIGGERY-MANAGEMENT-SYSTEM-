@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 // src/components/worker/WorkerMyContract.jsx
 // §23a — Worker views & prints their own employment contract
 

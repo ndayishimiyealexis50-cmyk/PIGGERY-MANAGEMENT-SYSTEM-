@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 // src/components/worker/Workers.jsx
 // §23 — Admin worker management: approve, assign roles, remove, restore
 

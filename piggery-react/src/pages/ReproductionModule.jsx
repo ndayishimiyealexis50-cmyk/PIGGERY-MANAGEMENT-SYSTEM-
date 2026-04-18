@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 import { fsSet } from '../lib/firestore';
 import { getOnlineFarmData, setOnlineFarmData } from '../utils/storage';
 import React, { useState } from 'react';

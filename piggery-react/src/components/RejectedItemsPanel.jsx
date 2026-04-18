@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 // src/components/RejectedItemsPanel.jsx
 // Worker panel to edit & resubmit rejected feeds, logs, sales, expenses
 

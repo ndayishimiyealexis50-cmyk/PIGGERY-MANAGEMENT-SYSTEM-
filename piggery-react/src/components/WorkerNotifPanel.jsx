@@ -1,3 +1,4 @@
+import { C, S } from "../styles";
 // src/components/WorkerNotifPanel.jsx
 // Worker notification panel — messages, salary, advances, bonuses, rejections
 
