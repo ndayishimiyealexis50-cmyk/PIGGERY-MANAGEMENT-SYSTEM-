@@ -620,7 +620,7 @@ function AppShell() {
       </div>
 
       {/* ── Main content area ── */}
-      <main
+      <ErrorBoundary><main
         className={isMobile ? 'mob-main' : ''}
         style={{ flex: 1, padding: '22px 22px 22px 24px', overflowY: 'auto', background: 'transparent', minWidth: 0, maxWidth: 900 }}
       >
@@ -691,7 +691,7 @@ function AppShell() {
           {page === 'pigentry'      && <Pigs {...commonProps} />}
           {page === 'assessment'    && <WorkerPigAssessment {...commonProps} />}
         </div>
-      </main>
+      </main></ErrorBoundary>
 
       {/* ── Mobile bottom nav ── */}
       <nav className="mob-bottom-nav">
