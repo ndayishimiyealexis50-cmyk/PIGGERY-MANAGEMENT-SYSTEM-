@@ -1,5 +1,5 @@
 import { C, S } from '../utils/constants';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { fsSet } from "../lib/firestore";
 
 // Farm role definitions — same list as original index.html (FARM_ROLES)
