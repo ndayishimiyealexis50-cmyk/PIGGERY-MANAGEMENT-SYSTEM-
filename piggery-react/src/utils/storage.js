@@ -1,73 +1,45 @@
-// ════════════════════════════════════════════════════════════════
-// FarmIQ — Firebase / Firestore Storage API
-// Migrated from §6 of index_migration_to_vite_react.html
-//
-// These wrappers write partial updates to the single farm document
-// in Firestore (farmiq/farm) and keep the in-memory cache
-// (_latestFarmData) in sync.
-//
-// TODO (migration):
-//   • Import `db` from your firebase.js initialisation file
-//     instead of relying on the global `window.FS_FARM_DOC`.
-//   • Replace window._latestFarmData with a Zustand store or
-//     React Context so modules don't need globals.
-// ════════════════════════════════════════════════════════════════
+import { db } from '../lib/firebase';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
-/**
- * Merge `data` into the global _latestFarmData cache, persist to
- * localStorage for offline resilience, then write to Firestore.
- *
- * @param {Object} data - Partial farm document to merge/overwrite.
- * @returns {Promise<void>}
- */
+const FARM_DOC = doc(db, 'farmiq', 'farm');
+let _latestFarmData = {};
+
 export async function getOnlineFarmData() {
   try {
-    if (window.FS_FARM_DOC) {
-      const snap = await window.FS_FARM_DOC.get();
-      return snap.exists ? snap.data() : {};
+    const snap = await getDoc(FARM_DOC);
+    if (snap.exists()) {
+      _latestFarmData = snap.data();
+      localStorage.setItem('farmData', JSON.stringify(_latestFarmData));
+      return _latestFarmData;
     }
   } catch (e) {
-    console.warn("[FarmIQ] getOnlineFarmData failed:", e);
+    console.warn('[FarmIQ] getOnlineFarmData failed:', e);
+    const cached = localStorage.getItem('farmData');
+    if (cached) return JSON.parse(cached);
   }
   return {};
 }
 
 export async function setOnlineFarmData(data) {
-  // 1. Update in-memory cache immediately so the UI stays responsive
-  if (window._latestFarmData) {
-    window._latestFarmData = { ...window._latestFarmData, ...data };
-  }
-
-  // 2. Persist to localStorage (offline / PWA resilience)
+  _latestFarmData = { ..._latestFarmData, ...data };
+  localStorage.setItem('farmData', JSON.stringify(_latestFarmData));
   try {
-    const prev = JSON.parse(localStorage.getItem('farmiq_farm') || '{}');
-    localStorage.setItem('farmiq_farm', JSON.stringify({ ...prev, ...data }));
-  } catch (_) { /* storage full / private browsing */ }
-
-  // 3. Write to Firestore
-  // window.FS_FARM_DOC is the Firestore DocumentReference set up in the
-  // original single-file app. After full migration, replace this with:
-  //
-  //   import { doc, setDoc } from 'firebase/firestore';
-  //   import { db } from '../firebase/firebase';
-  //   await setDoc(doc(db, 'farmiq', 'farm'), data, { merge: true });
-  //
-  try {
-    if (window.FS_FARM_DOC) {
-      await window.FS_FARM_DOC.update(data);
-    }
+    await setDoc(FARM_DOC, _latestFarmData, { merge: true });
   } catch (e) {
     console.warn('[FarmIQ] setOnlineFarmData Firestore write failed:', e);
   }
 }
 
-/**
- * Convenience wrapper — overwrite a single top-level array/object key.
- *
- * @example
- *   fsSet('pigs', updatedPigsArray);
- *   fsSet('expenses', updatedExpenses);
- */
+export function subscribeToFarmData(callback) {
+  return onSnapshot(FARM_DOC, (snap) => {
+    if (snap.exists()) {
+      _latestFarmData = snap.data();
+      localStorage.setItem('farmData', JSON.stringify(_latestFarmData));
+      callback(_latestFarmData);
+    }
+  });
+}
+
 export function fsSet(key, list) {
   return setOnlineFarmData({ [key]: list });
 }

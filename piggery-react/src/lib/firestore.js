@@ -9,7 +9,7 @@
 // when offline.  Public API is identical to the HTML version so all
 // existing component code can be copy-pasted without changes.
 
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ── Firestore document refs ───────────────────────────────────────────────────
@@ -199,4 +199,16 @@ export async function jbinAppend(key, newItem) {
     lsSetFarm(_latestFarmData);
     try { await setDoc(FS_FARM_DOC, _latestFarmData); } catch (e2) { /* offline */ }
   }
+}
+
+// ── Real-time subscription ─────────────────────────────
+export function subscribeToFarmData(callback) {
+  return onSnapshot(FS_FARM_DOC, (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      _latestFarmData = data;
+      try { localStorage.setItem('farmiq_farm', JSON.stringify(data)); } catch(e) {}
+      callback(data);
+    }
+  });
 }

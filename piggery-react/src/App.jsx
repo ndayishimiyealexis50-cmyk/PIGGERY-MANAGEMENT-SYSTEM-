@@ -23,6 +23,7 @@ import {
 } from './lib/firebase';
 import {
   getOnlineFarmData,
+  subscribeToFarmData,
   setOnlineFarmData,
   getOnlineUsers,
   FS_FARM_DOC,
@@ -343,6 +344,11 @@ function AppShell() {
       })
       .catch(() => setUsersLoaded(true));
 
+    // Subscribe to real-time Firestore updates
+    const unsubscribe = subscribeToFarmData((data) => {
+      applyFarmData({ ...data, __loadCapital: true });
+    });
+
     // Load all farm data once
     getOnlineFarmData()
       .then(async data => {
@@ -660,7 +666,8 @@ function AppShell() {
             window._addAuditLog(action, detail, actor?)
 
           And these imported functions from firestore.js:
-            setOnlineFarmData, getOnlineFarmData, fsSet, jbinAppend
+            setOnlineFarmData, getOnlineFarmData,
+  subscribeToFarmData, fsSet, jbinAppend
 
           And these from firebase.js:
             isAdminUser, isAdminEmail, ADMIN_EMAIL
