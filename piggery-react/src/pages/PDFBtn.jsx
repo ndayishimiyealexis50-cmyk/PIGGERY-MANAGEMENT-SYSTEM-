@@ -1,4 +1,4 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import { useState } from "react";
 import { fmtRWF, fmtNum, toDay } from "../utils/utils";
 import { getBusinessProfile } from "../utils/utils";

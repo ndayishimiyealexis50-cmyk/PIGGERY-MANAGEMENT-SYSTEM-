@@ -1,4 +1,4 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 // ════════════════════════════════════════════════════════════════
 // MODULE 22 — AIAdvisor
 // Medium priority — AI insights

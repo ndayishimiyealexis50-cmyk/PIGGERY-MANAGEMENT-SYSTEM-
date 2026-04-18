@@ -1,8 +1,6 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import React, { useState } from "react";
-import { _db, _profileCache, getAllUserProfiles } from "../firebase";
-import WorkerContractManager from "./WorkerContractManager";
-import WorkerTaskChart from "./WorkerTaskChart";
+import { _db, _profileCache, getAllUserProfiles } from "../lib/firestore";
 
 // Farm role definitions — same list as original index.html (FARM_ROLES)
 const FARM_ROLES = [

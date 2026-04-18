@@ -1,4 +1,4 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 // ════════════════════════════════════════════════════════════════
 // FarmIQ — AIPrediction Component
 // Migrated from §10 of index_migration_to_vite_react.html

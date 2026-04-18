@@ -3,7 +3,7 @@ import React, { useState } from "react";
 // FarmIQ — KPI Card Component
 // Migrated from §17 of index_migration_to_vite_react.html
 // ════════════════════════════════════════════════════════════════
-import { C } from '../styles/theme';
+import { C } from '../utils/constants';
 
 /**
  * Single KPI stat card with count-up animation class.

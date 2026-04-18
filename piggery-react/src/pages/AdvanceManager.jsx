@@ -1,9 +1,8 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import { useState } from "react";
-import { uid, toDay, fmtRWF } from "../utils";
-import { fsSet } from "../firebase";
-import { capitalTx } from "../utils/capital";
-import AdvanceAdminCard from "./AdvanceAdminCard";
+import { uid, toDay, fmtRWF } from "../utils/helpers";
+import { fsSet } from "../lib/firestore";
+import { capitalTx } from "../utils/capitalUtils";
 
 const ADVANCE_REASONS = ["Medical Emergency", "School Fees", "Rent", "Travel", "Family Emergency", "Other"];
 const ADVANCE_MONTHS  = ["January","February","March","April","May","June","July","August","September","October","November","December"];

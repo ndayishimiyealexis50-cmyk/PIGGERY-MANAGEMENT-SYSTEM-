@@ -1,4 +1,4 @@
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import React, { useState, useRef } from "react";
 import { fsSet } from "../utils/storage";
 import { uid, toDay, fmtRWF, capitalTx } from "../utils/helpers";

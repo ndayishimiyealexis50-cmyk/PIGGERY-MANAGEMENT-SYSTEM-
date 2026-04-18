@@ -3,7 +3,7 @@ import React, { useState } from "react";
 // MODULE 20 — WorkerPerformance
 // Medium priority — performance KPIs
 // ════════════════════════════════════════════════════════════════
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import { fmtRWF } from '../utils/formatters';
 
 export default function WorkerPerformance({ users, logs, feeds, sales }) {

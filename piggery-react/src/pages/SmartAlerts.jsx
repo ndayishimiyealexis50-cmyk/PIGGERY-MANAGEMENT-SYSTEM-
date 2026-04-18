@@ -3,7 +3,7 @@
 // High priority — auto notifications
 // ════════════════════════════════════════════════════════════════
 import { useState } from 'react';
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import { fmtRWF } from '../utils/formatters';
 import { toDay, daysDiff, getMarketPrice } from '../utils/helpers';
 import { sendWhatsApp } from '../utils/whatsapp';

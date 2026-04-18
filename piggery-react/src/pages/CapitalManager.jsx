@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { C, S } from "../styles/theme";
-import { uid, toDay, fmtRWF } from "../lib/utils";
+import { C, S } from "../utils/constants";
+import { uid, toDay, fmtRWF } from "../utils/helpers";
 import { calcCapitalBalance } from "../utils/capitalUtils";
 import KPI from "./KPI";
 

@@ -3,7 +3,7 @@
 // Medium priority — FCR analysis
 // ════════════════════════════════════════════════════════════════
 import { useState } from 'react';
-import { C, S } from '../styles/theme';
+import { C, S } from '../utils/constants';
 import { fmtRWF, fmtNum } from '../utils/formatters';
 
 const STAGE_FEED = { Piglet: 0.5, Weaner: 1.0, Grower: 1.8, Finisher: 2.8, Gilt: 2.2, Sow: 2.5, Boar: 2.0 };
