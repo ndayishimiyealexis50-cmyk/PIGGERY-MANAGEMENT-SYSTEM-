@@ -1,4 +1,3 @@
-import { C, S } from '../styles/theme';
 import { fsSet } from '../lib/firestore';
 import React from 'react';
 import { C, S } from '../utils/constants';
