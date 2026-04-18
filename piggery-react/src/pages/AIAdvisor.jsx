@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from "react";
 // ════════════════════════════════════════════════════════════════
 // MODULE 22 — AIAdvisor
 // Medium priority — AI insights

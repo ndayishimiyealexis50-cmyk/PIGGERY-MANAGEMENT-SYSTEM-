@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { fsSet } from "../utils/storage";
 import { uid, toDay, fmtRWF, capitalTx } from "../utils/helpers";
 import { getMarketPrice } from "../utils/market";
