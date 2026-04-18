@@ -59,6 +59,10 @@ import SalaryManager      from './pages/SalaryManager';
 import AuditLog           from './pages/AuditLog';
 import PigAssessmentHistory from './pages/PigAssessmentHistory';
 import WeeklyReport       from './pages/WeeklyReport';
+import AdvanceManager  from './pages/AdvanceManager';
+import Workers         from './pages/Workers';
+import WorkerPerformance from './pages/WorkerPerformance';
+import Fin             from './pages/Fin';
 import AIPrediction       from './pages/AIPrediction';
 // ── Sub-components used as pages ──────────────────────
 import ApprovalPanel      from './components/ApprovalPanel';
@@ -668,14 +672,20 @@ function AppShell() {
           {page === 'approvals'     && <ApprovalPanel {...commonProps} />}
           {page === 'ai'            && <AIAdvisor {...commonProps} />}
           {page === 'bigdata'       && <KPI {...commonProps} />}
-          {page === 'pnl'           && <ProfitLossAnalysis {...commonProps} />}
           {page === 'market'        && <PlaceholderPage name="RW Market" {...commonProps} />}
           {page === 'reproduction'  && <ReproductionModule {...commonProps} />}
           {page === 'stock'         && <StockManager {...commonProps} />}
-          {page === 'ledger'        && <Ledger {...commonProps} />}
-          {page === 'capital'       && <CapitalManager {...commonProps} />}
           {page === 'pigs'          && <Pigs {...commonProps} />}
           {page === 'feeding'       && <FeedLog {...commonProps} />}
+              {page === 'ledger'      && <Ledger {...commonProps} />}
+              {page === 'capital'     && <CapitalManager {...commonProps} />}
+              {page === 'advances'    && <AdvanceManager {...commonProps} />}
+              {page === 'financials'  && <Fin {...commonProps} />}
+              {page === 'pnl'         && <ProfitLossAnalysis {...commonProps} />}
+              {page === 'workers'     && <Workers {...commonProps} />}
+              {page === 'performance' && <WorkerPerformance {...commonProps} />}
+              {page === 'weeklyreport' && <WeeklyReport {...commonProps} />}
+              {page === 'kpi'         && <KPI {...commonProps} />}
           {page === 'sales'         && <SaleLog {...commonProps} />}
           {page === 'daylogs'       && <DLogs {...commonProps} />}
           {page === 'health'        && <VaccinationTracker {...commonProps} />}
