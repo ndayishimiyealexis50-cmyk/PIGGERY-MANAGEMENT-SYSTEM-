@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 // ════════════════════════════════════════════════════════════════
 // FarmIQ — KPI Card Component
 // Migrated from §17 of index_migration_to_vite_react.html

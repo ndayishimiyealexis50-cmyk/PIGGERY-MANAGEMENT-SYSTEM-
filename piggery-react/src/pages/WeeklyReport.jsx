@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 // ════════════════════════════════════════════════════════════════
 // FarmIQ — Weekly Report (Module #26)
 // Migrated from §17 of index_migration_to_vite_react.html

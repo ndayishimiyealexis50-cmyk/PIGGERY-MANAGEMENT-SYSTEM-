@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 // ════════════════════════════════════════════════════════════════
 // MODULE 20 — WorkerPerformance
 // Medium priority — performance KPIs

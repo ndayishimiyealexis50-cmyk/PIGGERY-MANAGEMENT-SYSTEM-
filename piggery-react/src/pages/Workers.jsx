@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { _db, _profileCache, getAllUserProfiles } from "../firebase";
 import WorkerContractManager from "./WorkerContractManager";
 import WorkerTaskChart from "./WorkerTaskChart";
