@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fsSet } from '../lib/firestore';
-import { useState, useEffect } from "react";
-import { C, S } from "../styles/theme.js";
 import { uid, toDay, fmtRWF } from "../lib/utils.js";
 import { db } from "../lib/firebase.js";
 import { capitalTx } from "../utils/capitalUtils.js";

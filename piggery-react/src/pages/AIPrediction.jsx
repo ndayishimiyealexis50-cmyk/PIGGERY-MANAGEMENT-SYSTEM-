@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from "react";
 // ════════════════════════════════════════════════════════════════
 // FarmIQ — AIPrediction Component
 // Migrated from §10 of index_migration_to_vite_react.html
@@ -8,7 +7,6 @@ import React, { useState, useEffect, useRef } from "react";
 // full AI layer is migrated).
 // ════════════════════════════════════════════════════════════════
 import { useState, useEffect } from 'react';
-import { C, S } from '../styles/constants';
 import { fmtRWF, toDay } from '../utils/helpers';
 import { getMarketPrice } from '../utils/market';
 

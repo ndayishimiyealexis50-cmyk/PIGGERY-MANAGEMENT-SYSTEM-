@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useRef } from "react";
 // src/pages/Login.jsx
 // ─── Full login screen — migrated from §19 of index.html ─────────────────────
 // Supports:

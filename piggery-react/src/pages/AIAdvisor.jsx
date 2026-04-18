@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
 // ════════════════════════════════════════════════════════════════
 // MODULE 22 — AIAdvisor
 // Medium priority — AI insights
 // ════════════════════════════════════════════════════════════════
 import { useState, useRef, useEffect } from 'react';
-import { C, S } from '../styles/theme';
 import { fmtRWF } from '../utils/formatters';
 import { toDay, getMarketPrice } from '../utils/helpers';
 
