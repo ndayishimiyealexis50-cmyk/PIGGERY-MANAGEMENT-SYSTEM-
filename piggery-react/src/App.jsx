@@ -149,7 +149,7 @@ function AppShell() {
   const INACTIVITY_MS = 6 * 60 * 1000; // 6 minutes
 
   // ── Navigate to home when user resolves ──────────────────────────────────
-  useEffect(() => { if (user?.uid) setPage(isAdmin ? 'home' : 'whome'); }, [user?.uid, isAdmin]);
+  useEffect(() => { if (user?.uid) { const admin = isAdminEmail(user.email) || user.role?.toLowerCase() === "admin"; setPage(admin ? "home" : "whome"); } }, [user?.uid]);
 
   // ── Mobile resize ─────────────────────────────────────────────────────────
   useEffect(() => {
