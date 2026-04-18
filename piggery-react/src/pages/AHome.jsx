@@ -1,4 +1,3 @@
-import { C, S } from "../styles";
 import { setOnlineFarmData } from '../utils/storage';
 // pages/AHome.jsx
 // ─── Admin Dashboard — Farm Overview ─────────────────────────────────────────

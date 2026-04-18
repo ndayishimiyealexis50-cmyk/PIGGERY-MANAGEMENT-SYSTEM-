@@ -1,4 +1,3 @@
-import { C, S } from "../styles";
 import React from 'react';
 import { toDay, fmtRWF } from '../utils/helpers';
 
