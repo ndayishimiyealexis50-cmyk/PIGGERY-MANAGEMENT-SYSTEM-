@@ -148,7 +148,7 @@ function AppShell() {
   const INACTIVITY_MS = 6 * 60 * 1000; // 6 minutes
 
   // ── Navigate to home when user resolves ──────────────────────────────────
-  useEffect(() => { if (user?.uid) setPage('home'); }, [user?.uid]);
+  useEffect(() => { if (user?.uid) setPage(isAdmin ? 'home' : 'whome'); }, [user?.uid, isAdmin]);
 
   // ── Mobile resize ─────────────────────────────────────────────────────────
   useEffect(() => {
