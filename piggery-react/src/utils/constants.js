@@ -99,4 +99,5 @@ export const S = {
     background: bg,
     color,
   }),
+  tab: (active) => ({ flex: 1, padding: "7px 10px", border: "none", borderRadius: 8, background: active ? C.accent : "transparent", color: active ? "#fff" : C.muted, fontWeight: active ? 700 : 500, fontSize: 12, cursor: "pointer", fontFamily: "inherit", textTransform: "capitalize", transition: "all .18s", letterSpacing: 0.1 }),
 };
