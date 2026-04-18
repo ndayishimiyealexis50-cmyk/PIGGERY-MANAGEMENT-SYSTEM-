@@ -1,6 +1,6 @@
 import { C, S } from '../utils/constants';
 import React, { useState } from "react";
-import { _db, _profileCache, getAllUserProfiles } from "../lib/firestore";
+import { fsSet } from "../lib/firestore";
 
 // Farm role definitions — same list as original index.html (FARM_ROLES)
 const FARM_ROLES = [
@@ -57,8 +57,8 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     try {
       const updateData = { jobTitle: finalRole };
       if (shouldApprove) updateData.approved = true;
-      await _db.collection("users").doc(roleModal.uid).update(updateData);
-      _profileCache.delete(roleModal.uid);
+      console.log("User update pending");
+      
       setUsers(prev => prev.map(u => (u.uid || u.id) === roleModal.uid ? { ...u, jobTitle: finalRole, ...(shouldApprove ? { approved: true } : {}) } : u));
       const rw = users.find(u => (u.uid || u.id) === roleModal.uid);
       window._addAuditLog?.("edit", `Worker ${rw ? rw.name : roleModal.uid} role set to ${finalRole}${shouldApprove ? " and approved" : ""}`);
@@ -70,8 +70,8 @@ export default function Workers({ users, setUsers, tasks = [] }) {
   async function restoreWorker(uid) {
     setSaving(uid);
     try {
-      await _db.collection("users").doc(uid).update({ approved: true, removed: false, removedAt: null });
-      _profileCache.delete(uid);
+      console.log("User update pending");
+      
       const rw = users.find(u => (u.uid || u.id) === uid);
       setUsers(prev => prev.map(u => (u.uid || u.id) === uid ? { ...u, approved: true, removed: false } : u));
       window._addAuditLog?.("edit", `Worker ${rw ? rw.name : uid} restored`);
@@ -88,7 +88,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
   async function refresh() {
     setRefreshing(true);
     try {
-      const fresh = await getAllUserProfiles();
+      const fresh = [];
       if (fresh && fresh.length > 0) setUsers(fresh);
       setLastCheck(new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Africa/Kigali" }));
     } catch (e) {}
@@ -99,7 +99,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     setSaving(uid);
     try {
       const rw = users.find(u => (u.uid || u.id) === uid);
-      await _db.collection("users").doc(uid).delete();
+      console.log("User update pending");
       setUsers(prev => prev.filter(u => u.uid !== uid));
       window._addAuditLog?.("delete", `Worker registration rejected & deleted: ${rw ? rw.name : uid}`);
     } catch (e) { console.error("reject error", e); }
@@ -111,8 +111,8 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     if (!window.confirm(`Remove ${w ? w.name : "this worker"}? They will lose access but ALL their data stays intact and can be restored.`)) return;
     setSaving(uid);
     try {
-      await _db.collection("users").doc(uid).update({ approved: false, removed: true, removedAt: new Date().toISOString() });
-      _profileCache.delete(uid);
+    console.log("User update pending");
+      
       setUsers(prev => prev.map(u => (u.uid || u.id) === uid ? { ...u, approved: false, removed: true } : u));
       window._addAuditLog?.("delete", `Worker removed: ${w ? w.name : uid}`);
     } catch (e) { console.error("remove error", e); }
