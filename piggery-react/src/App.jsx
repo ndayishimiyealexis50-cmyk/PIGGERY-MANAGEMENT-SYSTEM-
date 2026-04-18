@@ -38,6 +38,7 @@ import { auth } from './lib/firebase';
 
 // ── Page components ──────────────────────────────────
 import AHome              from './pages/AHome';
+import WHome from './pages/WHome';
 import SmartAlerts        from './pages/SmartAlerts';
 import ProfitInsight      from './pages/ProfitInsight';
 import FeedEfficiency     from './pages/FeedEfficiency';
@@ -658,6 +659,7 @@ function AppShell() {
 
         <div key={pageKey} className={pageDir === 'left' ? 'fade-in' : 'fade-in'}>
           {page === 'home'          && <AHome {...commonProps} />}
+{page === 'whome' && <WHome {...commonProps} logout={handleSignOut} />}
           {page === 'alerts'        && <SmartAlerts {...commonProps} />}
           {page === 'profitinsight' && <ProfitInsight {...commonProps} />}
           {page === 'feedefficiency'&& <FeedEfficiency {...commonProps} />}
