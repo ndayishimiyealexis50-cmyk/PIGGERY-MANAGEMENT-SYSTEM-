@@ -1,3 +1,4 @@
+import { C, S } from '../styles/theme';
 import React, { useState, useEffect, useRef } from "react";
 import { fsSet } from '../lib/firestore';
 import { uid, toDay, fmtRWF } from "../lib/utils.js";

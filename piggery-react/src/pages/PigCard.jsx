@@ -1,3 +1,4 @@
+import { C, S } from '../styles/theme';
 // src/pages/PigCard.jsx
 import React from 'react';
 import { C, S } from '../utils/constants';

@@ -1,3 +1,4 @@
+import { C, S } from '../styles/theme';
 import { useState } from "react";
 import { uid, toDay, fmtRWF } from "../utils";
 import { fsSet } from "../firebase";

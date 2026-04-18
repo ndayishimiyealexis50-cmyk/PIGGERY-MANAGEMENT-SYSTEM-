@@ -1,3 +1,4 @@
+import { C, S } from '../styles/theme';
 // src/pages/GrowthModal.jsx
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
