@@ -1,11 +1,11 @@
 import { fsSet } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
-import { fmtRWF, isAdminUser } from '../utils/helpers';
+import { fmtRWF, isAdminUser, capitalTx } from '../utils/helpers';
 import AIPrediction from './AIPrediction';
 import PDFBtn from './PDFBtn';
 
-export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, incomes, allData, user }) {
+export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, incomes, allData, user, capital, setCapital }) {
   const [editId, setEditId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [showForm, setShowForm] = useState(false);

@@ -1,11 +1,11 @@
 import { fsSet } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
-import { fmtRWF, fmtNum, isAdminUser } from '../utils/helpers';
+import { fmtRWF, fmtNum, isAdminUser, capitalTx } from '../utils/helpers';
 import AIPrediction from './AIPrediction';
 import PDFBtn from './PDFBtn';
 
-export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, incomes, allData, user }) {
+export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, incomes, allData, user, capital, setCapital }) {
   const [tab, setTab] = useState('records');
   const [filterWorker, setFilterWorker] = useState('');
   const [filterType, setFilterType] = useState('');
