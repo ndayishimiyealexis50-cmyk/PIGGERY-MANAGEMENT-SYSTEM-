@@ -137,5 +137,5 @@ export function getMarketSurveys() {
   return [];
 }
 
-export const genPigTag = (pigs) => { const n = (pigs ? pigs.length : 0) + 1; return 'PIG-' + String(n).padStart(3, '0'); };
+export const genPigTag = (breed, stage, pigs) => { const n = (pigs ? pigs.length : 0) + 1; const b = (breed || "PIG").slice(0,3).toUpperCase(); return b + "-" + String(n).padStart(3, "0"); };
 export const isAdminUser = (user) => user && user.role === 'admin';
