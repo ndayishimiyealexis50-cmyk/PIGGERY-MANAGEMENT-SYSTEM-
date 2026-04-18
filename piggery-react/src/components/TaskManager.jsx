@@ -17,7 +17,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { C, S } from "./styles";
+import { C, S } from "../styles";
 
 // ─── Helpers (import from your shared utils file in real project) ─────────────
 // These are inline stubs — replace with imports from utils.js
