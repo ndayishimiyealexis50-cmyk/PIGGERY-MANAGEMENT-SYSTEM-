@@ -1,6 +1,4 @@
-import { fsSet } from '../lib/firestore';
 import { useState } from "react";
-import { C, S } from "../styles";
 import { uid, toDay, fmtRWF } from "../utils";
 import { fsSet } from "../firebase";
 import { capitalTx } from "../utils/capital";

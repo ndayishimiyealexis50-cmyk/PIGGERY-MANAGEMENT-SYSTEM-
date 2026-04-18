@@ -1,5 +1,3 @@
-import { useState, useRef } from "react";
-import { C, S } from "../styles";
 import { fsSet } from "../utils/storage";
 import { uid, toDay, fmtRWF, capitalTx } from "../utils/helpers";
 import { getMarketPrice } from "../utils/market";

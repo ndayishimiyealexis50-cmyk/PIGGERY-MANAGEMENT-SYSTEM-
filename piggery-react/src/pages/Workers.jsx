@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react";
-import { C, S } from "../styles";
 import { _db, _profileCache, getAllUserProfiles } from "../firebase";
 import WorkerContractManager from "./WorkerContractManager";
 import WorkerTaskChart from "./WorkerTaskChart";

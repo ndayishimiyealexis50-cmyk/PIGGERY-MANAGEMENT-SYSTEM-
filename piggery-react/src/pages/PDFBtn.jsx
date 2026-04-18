@@ -1,4 +1,3 @@
-import { C, S } from "../styles";
 import { useState } from "react";
 import { fmtRWF, fmtNum, toDay } from "../utils/utils";
 import { getBusinessProfile } from "../utils/utils";

@@ -1,4 +1,3 @@
-import { C, S } from "../styles";
 import React from 'react';
 import { C, S } from '../utils/constants';
 import { fmtRWF, calcPnL, getMarketPrice } from '../utils/helpers';
