@@ -1,3 +1,4 @@
+import { WorkerTaskChart } from "../components/TaskManager";
 import { C, S } from '../utils/constants';
 import React, { useState, useEffect } from "react";
 import { fsSet } from "../lib/firestore";
