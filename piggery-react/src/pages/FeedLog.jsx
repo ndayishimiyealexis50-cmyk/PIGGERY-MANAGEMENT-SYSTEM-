@@ -59,6 +59,7 @@ export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, 
   const allWorkers = [...new Set(feeds.map(f => f.worker || 'Unknown'))];
   const allTypes = [...new Set(feeds.map(f => f.feedType || 'Other'))];
   const filtered = feeds.slice().reverse().filter(f => {
+      if (!isAdmin && f.worker !== user?.name) return false;
     if (filterWorker && f.worker !== filterWorker) return false;
     if (filterType && f.feedType !== filterType) return false;
     return true;
@@ -69,7 +70,7 @@ export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <div>
           <div style={S.h1}>🌾 Feeding Records</div>
-          <div style={S.sub}>{feeds.length} logs · {Math.round(totalKg * 10) / 10}kg fed · {fmtRWF(totalCost)} total cost</div>
+            <div style={S.sub}>{filtered.length} logs · {Math.round(filtered.reduce((s,f) => s+(f.kg||0),0)*10)/10}kg fed · {fmtRWF(filtered.reduce((s,f) => s+(f.cost||0),0))} total cost</div>
         </div>
         <PDFBtn label="Health PDF" type="health" getData={() => allData} icon="🌾" color="#374151" />
       </div>

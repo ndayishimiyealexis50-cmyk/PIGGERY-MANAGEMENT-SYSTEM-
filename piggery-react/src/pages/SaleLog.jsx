@@ -44,7 +44,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
         <div>
           <div style={S.h1}>Sales Records</div>
-          <div style={S.sub}>{sales.length} sales · {fmtRWF(sales.reduce((s, l) => s + (l.total || 0), 0))}</div>
+            <div style={S.sub}>{(isAdmin ? sales : sales.filter(s => s.worker === user?.name)).length} sales · {fmtRWF((isAdmin ? sales : sales.filter(s => s.worker === user?.name)).reduce((s, l) => s + (l.total || 0), 0))}</div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           {isAdmin && (
@@ -87,7 +87,8 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
 
       <div style={S.card}>
         {sales.length === 0 && <div style={{ color: C.faint, fontSize: 13 }}>No sales yet.</div>}
-        {sales.slice().reverse().map((s, i) => (
+        {(isAdmin ? sales : sales.filter(s => s.worker === user?.name)).slice().reverse().map((s, i) => (
+        
           <div key={s.id || i} style={{ borderBottom: '1px solid ' + C.border, paddingBottom: 8, marginBottom: 8 }}>
             {editId === s.id ? (
               <div>
