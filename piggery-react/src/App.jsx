@@ -677,36 +677,36 @@ function AppShell() {
         ────────────────────────────────────────────────────────────────────── */}
 
         <div key={pageKey} className={pageDir === 'left' ? 'fade-in' : 'fade-in'}>
-          {page === 'home'          && <AHome {...commonProps} />}
+          {page === 'home'          && isAdmin && <AHome {...commonProps} />}
 {page === 'whome' && <WHome {...commonProps} logout={handleSignOut} />}
           {page === 'alerts'        && <SmartAlerts {...commonProps} />}
           {page === 'profitinsight' && <ProfitInsight {...commonProps} />}
           {page === 'feedefficiency'&& <FeedEfficiency {...commonProps} />}
           {page === 'pigperformance'&& <PigPerformance {...commonProps} />}
-          {page === 'approvals'     && <ApprovalPanel {...commonProps} />}
-          {page === 'ai'            && <AIAdvisor {...commonProps} />}
-          {page === 'bigdata'       && <KPI {...commonProps} />}
+          {page === 'approvals'     && isAdmin && <ApprovalPanel {...commonProps} />}
+          {page === 'ai'            && isAdmin && <AIAdvisor {...commonProps} />}
+          {page === 'bigdata'       && isAdmin && <KPI {...commonProps} />}
           {page === 'market'        && <PlaceholderPage name="RW Market" {...commonProps} />}
-          {page === 'reproduction'  && <ReproductionModule {...commonProps} />}
-          {page === 'stock'         && <StockManager {...commonProps} />}
+          {page === 'reproduction'  && isAdmin && <ReproductionModule {...commonProps} />}
+          {page === 'stock'         && isAdmin && <StockManager {...commonProps} />}
           {page === 'pigs'          && <Pigs {...commonProps} />}
           {page === 'feeding'       && <FeedLog {...commonProps} />}
-              {page === 'ledger'      && <Ledger {...commonProps} />}
-              {page === 'capital'     && <CapitalManager {...commonProps} />}
-              {page === 'advances'    && <AdvanceManager {...commonProps} />}
-              {page === 'financials'  && <Fin {...commonProps} />}
-              {page === 'pnl'         && <ProfitLossAnalysis {...commonProps} />}
-              {page === 'workers'     && <Workers {...commonProps} />}
-              {page === 'performance' && <WorkerPerformance {...commonProps} />}
+              {page === 'ledger'      && isAdmin && <Ledger {...commonProps} />}
+              {page === 'capital'     && isAdmin && <CapitalManager {...commonProps} />}
+              {page === 'advances'    && isAdmin && <AdvanceManager {...commonProps} />}
+              {page === 'financials'  && isAdmin && <Fin {...commonProps} />}
+              {page === 'pnl'         && isAdmin && <ProfitLossAnalysis {...commonProps} />}
+              {page === 'workers'     && isAdmin && <Workers {...commonProps} />}
+              {page === 'performance' && isAdmin && <WorkerPerformance {...commonProps} />}
               {page === 'weeklyreport' && <WeeklyReport {...commonProps} />}
-              {page === 'kpi'         && <KPI {...commonProps} />}
+              {page === 'kpi'         && isAdmin && <KPI {...commonProps} />}
           {page === 'sales'         && <SaleLog {...commonProps} />}
           {page === 'daylogs'       && <DLogs {...commonProps} />}
           {page === 'health'        && <VaccinationTracker {...commonProps} />}
-          {page === 'payroll'       && <SalaryManager {...commonProps} />}
+          {page === 'payroll'       && isAdmin && <SalaryManager {...commonProps} />}
           {page === 'tasks'         && <TaskManager {...commonProps} />}
           {page === 'settings'      && <PlaceholderPage name="Settings" {...commonProps} />}
-          {page === 'audit'         && <AuditLog {...commonProps} />}
+          {page === 'audit'         && isAdmin && <AuditLog {...commonProps} />}
           {/* Worker-only routes */}
           {page === 'dailyentry'    && <DLogs {...commonProps} />}
           {page === 'feedentry'     && <FeedLog {...commonProps} />}
@@ -721,7 +721,7 @@ function AppShell() {
       <nav className="mob-bottom-nav">
         {(isAdmin
           ? [['home','📊','Home'],['alerts','🔔','Alerts'],['pigs','🐷','Pigs'],['feeding','🌾','Feed'],['sales','💵','Sales']]
-          : [['home','🏠','Home'],['dailyentry','📋','Report'],['feedentry','🌾','Feed'],['saleentry','💵','Sale'],['pigentry','🐷','Pig']]
+          : [['whome','🏠','Home'],['dailyentry','📋','Report'],['feedentry','🌾','Feed'],['saleentry','💵','Sale'],['pigentry','🐷','Pig']]
         ).map(([id, icon, label]) => (
           <button key={id} className={`mob-nav-btn${page === id ? ' mob-active' : ''}`} onClick={() => { setPage(id); setPageKey(k => k + 1); }}>
             <span className="mob-icon">{icon}</span>
