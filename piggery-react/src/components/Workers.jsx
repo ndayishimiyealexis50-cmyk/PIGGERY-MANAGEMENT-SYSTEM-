@@ -7,7 +7,7 @@ import { C, S } from '../utils/constants'
 import { _db, _profileCache } from '../../firebase/config'
 import { getAllUserProfiles } from '../../firebase/db'
 import WorkerTaskChart from '../WorkerTaskChart'
-import WorkerContractManager from './WorkerContractManager'
+import WorkerContractManager from '../components/WorkerContractManager'
 
 export const FARM_ROLES = [
   { id: 'farm_manager',  label: '🏡 Farm Manager',  desc: 'Oversees all farm operations' },
