@@ -57,7 +57,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     try {
       const updateData = { jobTitle: finalRole };
       if (shouldApprove) updateData.approved = true;
-      console.log("User update pending");
+      await fsSet("users", roleModal.uid, updateData);
       
       setUsers(prev => prev.map(u => (u.uid || u.id) === roleModal.uid ? { ...u, jobTitle: finalRole, ...(shouldApprove ? { approved: true } : {}) } : u));
       const rw = users.find(u => (u.uid || u.id) === roleModal.uid);
@@ -70,7 +70,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
   async function restoreWorker(uid) {
     setSaving(uid);
     try {
-      console.log("User update pending");
+      await fsSet("users", uid, { approved: true, removed: false });
       
       const rw = users.find(u => (u.uid || u.id) === uid);
       setUsers(prev => prev.map(u => (u.uid || u.id) === uid ? { ...u, approved: true, removed: false } : u));
@@ -99,7 +99,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     setSaving(uid);
     try {
       const rw = users.find(u => (u.uid || u.id) === uid);
-      console.log("User update pending");
+      await fsSet("users", uid, { approved: false, removed: true });
       setUsers(prev => prev.filter(u => u.uid !== uid));
       window._addAuditLog?.("delete", `Worker registration rejected & deleted: ${rw ? rw.name : uid}`);
     } catch (e) { console.error("reject error", e); }
@@ -111,7 +111,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
     if (!window.confirm(`Remove ${w ? w.name : "this worker"}? They will lose access but ALL their data stays intact and can be restored.`)) return;
     setSaving(uid);
     try {
-    console.log("User update pending");
+    await fsSet("users", uid, { approved: false, removed: true });
       
       setUsers(prev => prev.map(u => (u.uid || u.id) === uid ? { ...u, approved: false, removed: true } : u));
       window._addAuditLog?.("delete", `Worker removed: ${w ? w.name : uid}`);
