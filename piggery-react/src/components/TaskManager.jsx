@@ -71,7 +71,7 @@ function useAutoFeedingTasks(tasks, setTasks, users, feeds) {
 }
 
 /* ─── Worker Task Chart ─────────────────────────────────────────── */
-function WorkerTaskChart({ users, tasks }) {
+export function WorkerTaskChart({ users, tasks }) {
   const workers = users.filter(u => u.role === "worker" && u.approved);
   if (workers.length === 0) return null;
   const today = toDay();
