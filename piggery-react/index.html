@@ -25,6 +25,30 @@
   <title>FarmIQ — AI Pig Farm Management v3</title>
 </head>
 <body>
+    <div id="splash" style="position:fixed;inset:0;background:linear-gradient(160deg,#0a1f0f 0%,#0f2d1a 50%,#0a1a0f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.6s ease">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(76,175,130,0.15) 0%,transparent 70%)"></div>
+    <div style="font-size:80px;animation:pigBounce 1s ease;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(76,175,130,0.5))">🐖</div>
+    <div style="color:#fff;font-size:22px;font-weight:900;letter-spacing:2px;text-shadow:0 0 20px rgba(76,175,130,0.8);animation:fadeUp 0.6s 0.3s both">SMART PIGGERY</div>
+    <div style="color:#4caf82;font-size:12px;font-weight:700;letter-spacing:3px;margin-top:5px;animation:fadeUp 0.6s 0.5s both">MANAGEMENT SYSTEM</div>
+    <div style="margin-top:6px;color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:1px;animation:fadeUp 0.6s 0.7s both">FarmIQ v3</div>
+    <div style="margin-top:35px;width:160px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;animation:fadeUp 0.6s 0.8s both">
+      <div id="splash-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#2d8a5e,#4caf82,#7dd4a8);border-radius:2px;transition:width 1.4s ease"></div>
+    </div>
+    <div style="position:absolute;bottom:40px;color:rgba(255,255,255,0.25);font-size:10px;letter-spacing:1px">Powered by FarmIQ AI</div>
+  </div>
+  <style>
+    @keyframes pigBounce{0%{transform:scale(0) rotate(-20deg);opacity:0}60%{transform:scale(1.2) rotate(5deg)}80%{transform:scale(0.95)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+    @keyframes fadeUp{0%{transform:translateY(20px);opacity:0}100%{transform:translateY(0);opacity:1}}
+  </style>
+  <script>
+    window.addEventListener("load", function() {
+      setTimeout(function(){ var b=document.getElementById("splash-bar"); if(b) b.style.width="100%"; },100);
+      setTimeout(function() {
+        var s = document.getElementById("splash");
+        if(s){s.style.opacity="0";setTimeout(function(){s.remove()},600);}
+      }, 2200);
+    });
+  </script>
   <div id="root"></div>
   <!-- Vite injects the bundled JS here — no CDN scripts needed -->
   <script type="module" src="/src/main.jsx"></script>
