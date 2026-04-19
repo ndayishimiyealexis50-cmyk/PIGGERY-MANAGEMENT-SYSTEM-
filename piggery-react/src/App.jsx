@@ -62,6 +62,7 @@ import AuditLog           from './pages/AuditLog';
 import PigAssessmentHistory from './pages/PigAssessmentHistory';
 import WeeklyReport       from './pages/WeeklyReport';
 import AdvanceManager  from './pages/AdvanceManager';
+import BonusRequestManager from './components/BonusRequestManager';
 import Workers         from './pages/Workers';
 import WorkerPerformance from './pages/WorkerPerformance';
 import Fin             from './pages/Fin';
@@ -517,6 +518,7 @@ function AppShell() {
     { id: 'pigentry',    l: '🐷 Register Pig' },
     { id: 'assessment',  l: '📐 Assessment' },
     { id: 'advances',    l: '💰 Advance Request' },
+    { id: 'bonus',       l: '🎁 Bonus Request' },
   ];
 
   const navItems = isAdmin ? adminNav : workerNav;
@@ -695,6 +697,7 @@ function AppShell() {
               {page === 'ledger'      && isAdmin && <Ledger {...commonProps} />}
               {page === 'capital'     && isAdmin && <CapitalManager {...commonProps} />}
               {page === 'advances'    && <AdvanceManager {...commonProps} />}
+            {page === 'bonus' && <BonusRequestManager {...commonProps} />}
               {page === 'financials'  && isAdmin && <Fin {...commonProps} />}
               {page === 'pnl'         && isAdmin && <ProfitLossAnalysis {...commonProps} />}
               {page === 'workers'     && isAdmin && <Workers {...commonProps} />}
