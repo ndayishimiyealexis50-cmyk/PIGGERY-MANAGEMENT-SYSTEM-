@@ -42,6 +42,7 @@ import AHome              from './pages/AHome';
 import WHome from './pages/WHome';
 import BuyEntry from './pages/BuyEntry';
 import ErrorBoundary from './components/ErrorBoundary';
+import RWMarket from './pages/RWMarket';
 import SmartAlerts        from './pages/SmartAlerts';
 import ProfitInsight      from './pages/ProfitInsight';
 import FeedEfficiency     from './pages/FeedEfficiency';
