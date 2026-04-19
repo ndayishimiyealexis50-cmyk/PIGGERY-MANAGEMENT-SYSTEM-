@@ -456,7 +456,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
             <div style={{ fontSize: 12, color: "#b45309" }}>The system auto-generated salaries for this month on the 25th. Review and approve each one so workers can see them.</div>
             <div style={{ fontSize: 11, color: "#92400e", marginTop: 4 }}>Workers: <strong>{pendingApprovalList.map(s => s.workerName).join(", ")}</strong></div>
           </div>
-          <button onClick={() => setTab("history")} style={{ ...S.btn("#d97706"), fontSize: 12, padding: "8px 16px", flexShrink: 0 }}>📋 Review Now</button>
+          <button onClick={() => setTab("history")} style={{ ...S.btn, { background: "#d97706"), fontSize: 12, padding: "8px 16px", flexShrink: 0 }}>📋 Review Now</button>
         </div>
       )}
 
@@ -495,7 +495,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
               <label style={S.lbl}>Notes (optional)</label>
               <input type="text" placeholder="e.g. Includes housing allowance" value={configForm.notes} onChange={e => setConfigForm(f => ({ ...f, notes: e.target.value }))} style={S.inp} />
             </div>
-            <button onClick={saveConfig} disabled={configSaving || !configForm.workerId || !configForm.grossSalary} style={{ ...S.btn(), width: "100%", padding: "11px", fontSize: 14, opacity: (!configForm.workerId || !configForm.grossSalary) ? 0.5 : 1 }}>
+            <button onClick={saveConfig} disabled={configSaving || !configForm.workerId || !configForm.grossSalary} style={{ ...S.btn, width: "100%", padding: "11px", fontSize: 14, opacity: (!configForm.workerId || !configForm.grossSalary) ? 0.5 : 1 }}>
               {configSaving ? "Saving…" : "💾 Save Salary Config"}
             </button>
           </div>
@@ -504,7 +504,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
             <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>
               Normally salaries auto-generate on the <strong>25th of each month</strong>. Trigger manually here at any time — skips workers who already have a salary record this month.
             </div>
-            <button onClick={triggerAutoGenerate} disabled={saving} style={{ ...S.btn("#6366f1"), padding: "10px 20px", fontSize: 13 }}>
+            <button onClick={triggerAutoGenerate} disabled={saving} style={{ ...S.btn, { background: "#6366f1"), padding: "10px 20px", fontSize: 13 }}>
               {saving ? "Generating…" : "🚀 Generate This Month's Salaries"}
             </button>
           </div>
@@ -645,7 +645,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
             )}
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={editId ? saveEdit : scheduleSalary} disabled={saving || !form.workerId || !form.amount || parseFloat(form.amount) <= 0}
-                style={{ ...S.btn(C.accent), flex: 1, padding: "12px", fontSize: 14, fontWeight: 700, opacity: (saving || !form.workerId || !form.amount) ? 0.55 : 1 }}>
+                style={{ ...S.btn, background: C.accent, flex: 1, padding: "12px", fontSize: 14, fontWeight: 700, opacity: (saving || !form.workerId || !form.amount) ? 0.55 : 1 }}>
                 {saving ? "⏳ Saving…" : editId ? "✅ Save Changes →" : "📅 Schedule Salary →"}
               </button>
               {editId && <button onClick={() => { setEditId(null); setForm(defForm); setTab("history"); }} style={{ padding: "12px 16px", borderRadius: 9, border: "1px solid " + C.border, background: C.elevated, color: C.muted, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Cancel</button>}
