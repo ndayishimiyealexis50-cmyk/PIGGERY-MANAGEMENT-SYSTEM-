@@ -690,7 +690,7 @@ function AppShell() {
           {page === 'approvals'     && isAdmin && <ApprovalPanel {...commonProps} />}
           {page === 'ai'            && isAdmin && <AIAdvisor {...commonProps} />}
           {page === 'bigdata'       && isAdmin && <KPI {...commonProps} />}
-          {page === 'market'        <RWMarket {...commonProps} />
+          {page === 'market'        && <RWMarket {...commonProps} />}
           {page === 'reproduction'  && isAdmin && <ReproductionModule {...commonProps} />}
           {page === 'stock'         && isAdmin && <StockManager {...commonProps} />}
           {page === 'pigs'          && <Pigs {...commonProps} />}
