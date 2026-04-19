@@ -131,6 +131,7 @@ export async function getOnlineFarmData() {
  * queueing a Firestore write.  Returns the save promise so callers can await it.
  */
 export function setOnlineFarmData(data) {
+
   _latestFarmData = {
     ...(_latestFarmData || {}),
     ...data,
@@ -139,9 +140,11 @@ export function setOnlineFarmData(data) {
   lsSetFarm(_latestFarmData);
   _pendingWriteCount++;
 
+  const toWrite = { ...data, updatedAt: _latestFarmData.updatedAt };
+
   _saveQueue = _saveQueue.then(async () => {
     try {
-      await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true });
+      await setDoc(FS_FARM_DOC, toWrite, { merge: true });
       _offlineStatus.lastSync = new Date().toLocaleTimeString('en-GB', {
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kigali',
       });
