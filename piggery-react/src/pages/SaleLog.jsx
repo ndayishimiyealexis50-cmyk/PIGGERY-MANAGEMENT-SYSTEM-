@@ -1,4 +1,4 @@
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import { fmtRWF, isAdminUser, capitalTx } from '../utils/helpers';
@@ -21,7 +21,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     const entry = { id, buyer: addForm.buyer, weight, priceKg, total, date: addForm.date };
     const updated = [...sales, entry];
     setSales(updated);
-    fsSet('sales', updated);
+    jbinAppend('sales', updated);
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
@@ -33,7 +33,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     const total = weight * priceKg;
     const updated = sales.map(x => x.id === s.id ? { ...x, ...editForm, weight, priceKg, total } : x);
     setSales(updated);
-    fsSet('sales', updated);
+    jbinAppend('sales', updated);
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setEditId(null);
     setEditForm(null);
@@ -123,7 +123,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
                 {isAdmin && (
                   <div style={{ display: 'flex', gap: 5, marginTop: 4, justifyContent: 'flex-end' }}>
                     <button onClick={() => { setEditId(s.id); setEditForm({ buyer: s.buyer || '', weight: String(s.weight || ''), priceKg: String(s.priceKg || ''), date: s.date }); }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid ' + C.border, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-                    <button onClick={() => { if (window.confirm('Delete this sale record?')) { const u = sales.filter(x => x.id !== s.id); setSales(u); fsSet('sales', u); } }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+                    <button onClick={() => { if (window.confirm('Delete this sale record?')) { const u = sales.filter(x => x.id !== s.id); setSales(u); jbinAppend('sales', u); } }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
                   </div>
                 )}
               </>

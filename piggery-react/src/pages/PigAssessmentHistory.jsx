@@ -1,5 +1,5 @@
 import { setOnlineFarmData } from '../utils/storage';
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 /**
  * §36 — PigAssessmentHistory
  * Page key: "assessmenthistory"
@@ -44,7 +44,7 @@ export default function PigAssessmentHistory({ pigs, setPigs, assessments, setAs
   function approve(a) {
     setPigs(p => {
       const u = p.map(pig => pig.id === a.pigId ? { ...pig, weight: a.weight } : pig);
-      fsSet('pigs', u);
+      jbinAppend('pigs', u);
       return u;
     });
     const updated = (assessments || []).map(x => x.id === a.id ? { ...x, approved: true, approvedAt: toDay() } : x);
@@ -62,7 +62,7 @@ export default function PigAssessmentHistory({ pigs, setPigs, assessments, setAs
     let updatedPigs = [...pigs];
     batch.forEach(a => { updatedPigs = updatedPigs.map(pig => pig.id === a.pigId ? { ...pig, weight: a.weight } : pig); });
     setPigs(updatedPigs);
-    fsSet('pigs', updatedPigs);
+    jbinAppend('pigs', updatedPigs);
     const updatedA = (assessments || []).map(x => batch.find(b => b.id === x.id) ? { ...x, approved: true, approvedAt: toDay() } : x);
     setAssessments(updatedA);
     fsSet('assessments', updatedA);

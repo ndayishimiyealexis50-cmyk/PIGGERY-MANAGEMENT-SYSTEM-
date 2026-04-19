@@ -1,4 +1,4 @@
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import {
@@ -62,7 +62,7 @@ export default function Ledger({
   function addExpense() {
     if (!eForm.amount) return;
     const newE = { ...eForm, id: uid(), amount: parseFloat(eForm.amount), worker: 'Admin' };
-    setExpenses(p => { const updated = [...p, newE]; fsSet('expenses', updated); return updated; });
+    setExpenses(p => { const updated = [...p, newE]; jbinAppend('expenses', updated); return updated; });
     if (setCapital) capitalTx(capital, setCapital, { type: 'expense', category: eForm.category, amount: parseFloat(eForm.amount), description: eForm.description, date: eForm.date });
     window._addAuditLog && window._addAuditLog('add', `Expense added: ${eForm.category} ${fmtRWF(parseFloat(eForm.amount))} (${eForm.date})`);
     setESaved(true);
@@ -87,14 +87,14 @@ export default function Ledger({
 
   function deleteExpense(id) {
     const _exp = expenses.find(e => e.id === id);
-    setExpenses(p => { const updated = p.filter(e => e.id !== id); fsSet('expenses', updated); return updated; });
+    setExpenses(p => { const updated = p.filter(e => e.id !== id); jbinAppend('expenses', updated); return updated; });
     window._addAuditLog && window._addAuditLog('delete', `Expense deleted: ${_exp ? _exp.category + ' ' + fmtRWF(_exp.amount) : ''}`);
   }
 
   function saveEdit() {
     if (!editItem) return;
     if (editItem.src === 'income') setIncomes(p => { const updated = p.map(i => i.id === editItem.id ? { ...i, ...editItem, amount: parseFloat(editItem.amount) || i.amount } : i); fsSet('incomes', updated); return updated; });
-    if (editItem.src === 'expense') setExpenses(p => { const updated = p.map(e => e.id === editItem.id ? { ...e, ...editItem, amount: parseFloat(editItem.amount) || e.amount } : e); fsSet('expenses', updated); return updated; });
+    if (editItem.src === 'expense') setExpenses(p => { const updated = p.map(e => e.id === editItem.id ? { ...e, ...editItem, amount: parseFloat(editItem.amount) || e.amount } : e); jbinAppend('expenses', updated); return updated; });
     window._addAuditLog && window._addAuditLog('edit', `${editItem.src === 'income' ? 'Income' : 'Expense'} edited: ${editItem.category} ${fmtRWF(parseFloat(editItem.amount) || 0)}`);
     setEditItem(null);
   }
@@ -300,8 +300,8 @@ export default function Ledger({
                           if (window.confirm('Delete this record? This will reverse the capital effect.')) {
                             if (tx.src === 'income') deleteIncome(tx.id);
                             else if (tx.src === 'expense') deleteExpense(tx.id);
-                            else if (tx.src === 'sale') { setSales(p => { const u = p.filter(s => s.id !== tx.id); fsSet('sales', u); window._addAuditLog && window._addAuditLog('delete', `Capital sale transaction deleted: ${fmtRWF(tx.amount || 0)}`); return u; }); }
-                            else if (tx.src === 'feed') { setFeeds(p => { const u = p.filter(f => f.id !== tx.id); fsSet('feeds', u); window._addAuditLog && window._addAuditLog('delete', `Capital feed transaction deleted: ${fmtRWF(tx.amount || 0)}`); return u; }); }
+                            else if (tx.src === 'sale') { setSales(p => { const u = p.filter(s => s.id !== tx.id); jbinAppend('sales', u); window._addAuditLog && window._addAuditLog('delete', `Capital sale transaction deleted: ${fmtRWF(tx.amount || 0)}`); return u; }); }
+                            else if (tx.src === 'feed') { setFeeds(p => { const u = p.filter(f => f.id !== tx.id); jbinAppend('feeds', u); window._addAuditLog && window._addAuditLog('delete', `Capital feed transaction deleted: ${fmtRWF(tx.amount || 0)}`); return u; }); }
                           }
                         }} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
                       </div>

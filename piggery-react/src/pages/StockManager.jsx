@@ -1,4 +1,4 @@
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import { uid, toDay, fmtRWF, fmtNum, capitalTx } from '../utils/helpers';
@@ -28,7 +28,7 @@ export default function StockManager({ stock, setStock, feeds, pigs, capital, se
     const totalCost = qty * cpu;
     setStock(p => {
       const updated = [...p, { ...form, id: uid(), quantity: qty, minLevel: parseFloat(form.minLevel) || 0, costPerUnit: cpu, lastUpdated: toDay() }];
-      fsSet('stock', updated);
+      jbinAppend('stock', updated);
       window._addAuditLog && window._addAuditLog('add', `Stock item added: ${form.name} (${qty}${form.unit})`);
       return updated;
     });
@@ -44,7 +44,7 @@ export default function StockManager({ stock, setStock, feeds, pigs, capital, se
     const _stk = stock.find(s => s.id === id);
     setStock(p => {
       const updated = p.map(s => s.id === id ? { ...s, quantity: Math.max(0, s.quantity + delta), lastUpdated: toDay() } : s);
-      fsSet('stock', updated);
+      jbinAppend('stock', updated);
       window._addAuditLog && window._addAuditLog('edit', `Stock adjusted: ${_stk ? _stk.name : 'item'} ${delta > 0 ? '+' : ''}${delta}`);
       return updated;
     });

@@ -1,4 +1,4 @@
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 import React, { useState } from 'react';
 import { C, S } from '../utils/constants';
 import { fmtRWF, fmtNum, isAdminUser, capitalTx } from '../utils/helpers';
@@ -166,7 +166,7 @@ export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, 
                       <div><label style={S.lbl}>Date</label><input type="date" value={editForm.date} onChange={e => setEditForm({ ...editForm, date: e.target.value })} style={S.inp} /></div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button onClick={() => { setFeeds(p => { const updated = p.map(x => x.id === f.id ? { ...x, ...editForm, kg: parseFloat(editForm.kg) || x.kg, cost: parseFloat(editForm.cost) || x.cost } : x); fsSet('feeds', updated); return updated; }); setEditId(null); setEditForm(null); }} style={{ ...S.btn(C.accent), flex: 1, padding: '7px', fontSize: 12 }}>✓ Save</button>
+                      <button onClick={() => { setFeeds(p => { const updated = p.map(x => x.id === f.id ? { ...x, ...editForm, kg: parseFloat(editForm.kg) || x.kg, cost: parseFloat(editForm.cost) || x.cost } : x); jbinAppend('feeds', updated); return updated; }); setEditId(null); setEditForm(null); }} style={{ ...S.btn(C.accent), flex: 1, padding: '7px', fontSize: 12 }}>✓ Save</button>
                       <button onClick={() => { setEditId(null); setEditForm(null); }} style={{ ...S.btn('#374151'), flex: 1, padding: '7px', fontSize: 12 }}>Cancel</button>
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export default function FeedLog({ feeds, setFeeds, pigs, logs, sales, expenses, 
                       {isAdmin && (
                         <div style={{ display: 'flex', gap: 5, marginTop: 5, justifyContent: 'flex-end' }}>
                           <button onClick={() => { setEditId(f.id); setEditForm({ kg: String(f.kg), cost: String(f.cost), feedType: f.feedType, date: f.date }); }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid ' + C.border, background: 'transparent', color: C.muted, cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-                          <button onClick={() => { if (window.confirm('Delete this feed record?')) setFeeds(p => { const updated = p.filter(x => x.id !== f.id); fsSet('feeds', updated); return updated; }); }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+                          <button onClick={() => { if (window.confirm('Delete this feed record?')) setFeeds(p => { const updated = p.filter(x => x.id !== f.id); jbinAppend('feeds', updated); return updated; }); }} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
                         </div>
                       )}
                     </div>

@@ -1,4 +1,4 @@
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 import React from 'react';
 import { C, S } from '../utils/constants';
 import { isAdminUser } from '../utils/helpers';
@@ -32,7 +32,7 @@ export default function DLogs({ logs, setLogs, pigs, feeds, sales, expenses, inc
                     if (window.confirm('Delete this log?')) {
                       const u = logs.filter(l => l.id !== log.id);
                       setLogs(u);
-                      fsSet('logs', u);
+                      jbinAppend('logs', u);
                     }
                   }}
                   style={{ fontSize: 10, padding: '2px 8px', borderRadius: 5, border: '1px solid rgba(239,68,68,.3)', background: 'transparent', color: C.red, cursor: 'pointer', fontFamily: 'inherit' }}

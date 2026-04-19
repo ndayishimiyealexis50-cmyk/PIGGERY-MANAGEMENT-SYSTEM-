@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { uid, toDay, capitalTx } from '../utils/helpers';
-import { fsSet } from '../lib/firestore';
+import { fsSet, jbinAppend } from '../lib/firestore';
 
 export default function BuyEntry({ stock, setStock, capital, setCapital, setPage, user }) {
   const [form, setForm] = useState({ name: '', category: 'Feed', quantity: '', unit: 'kg', costPerUnit: '', notes: '' });
@@ -26,7 +26,7 @@ export default function BuyEntry({ stock, setStock, capital, setCapital, setPage
       updated = [...(stock || []), { id: uid(), name: form.name, category: form.category, quantity: qty, unit: form.unit, costPerUnit: cpu, minLevel: 0, notes: form.notes, lastUpdated: toDay() }];
     }
     setStock(updated);
-    await fsSet('stock', updated);
+    await jbinAppend('stock', updated);
 
     const cat = form.category === 'Medicine' ? 'Medicine' : form.category === 'Vaccine' ? 'Veterinary' : form.category === 'Feed' ? 'Feed Purchase' : 'Equipment';
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'expense', category: cat, amount: totalCost, description: `Purchased ${qty}${form.unit} of ${form.name}`, date: toDay() });
