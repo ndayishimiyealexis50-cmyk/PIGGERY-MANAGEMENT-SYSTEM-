@@ -516,6 +516,7 @@ function AppShell() {
     { id: 'buyentry',    l: '🛒 Buy Entry' },
     { id: 'pigentry',    l: '🐷 Register Pig' },
     { id: 'assessment',  l: '📐 Assessment' },
+    { id: 'advances',    l: '💰 Advance Request' },
   ];
 
   const navItems = isAdmin ? adminNav : workerNav;
@@ -693,7 +694,7 @@ function AppShell() {
           {page === 'feeding'       && <FeedLog {...commonProps} />}
               {page === 'ledger'      && isAdmin && <Ledger {...commonProps} />}
               {page === 'capital'     && isAdmin && <CapitalManager {...commonProps} />}
-              {page === 'advances'    && isAdmin && <AdvanceManager {...commonProps} />}
+              {page === 'advances'    && <AdvanceManager {...commonProps} />}
               {page === 'financials'  && isAdmin && <Fin {...commonProps} />}
               {page === 'pnl'         && isAdmin && <ProfitLossAnalysis {...commonProps} />}
               {page === 'workers'     && isAdmin && <Workers {...commonProps} />}
