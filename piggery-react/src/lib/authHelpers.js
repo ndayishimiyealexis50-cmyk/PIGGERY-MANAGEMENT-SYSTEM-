@@ -19,7 +19,7 @@
 //    All Firebase config belongs in firebase.js (via .env).
 // ─────────────────────────────────────────────────────────────
 
-import { db } from "../firebase/firestore"; // adjust path if needed
+import { db } from "firebase/firestore"; // adjust path if needed
 import {
   collection,
   doc,
