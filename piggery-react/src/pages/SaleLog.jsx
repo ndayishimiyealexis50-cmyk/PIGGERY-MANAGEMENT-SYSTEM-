@@ -22,6 +22,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     const updated = [...sales, entry];
     setSales(updated);
     fsSet('sales', updated);
+    if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
   };
@@ -33,6 +34,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     const updated = sales.map(x => x.id === s.id ? { ...x, ...editForm, weight, priceKg, total } : x);
     setSales(updated);
     fsSet('sales', updated);
+    if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setEditId(null);
     setEditForm(null);
   };
