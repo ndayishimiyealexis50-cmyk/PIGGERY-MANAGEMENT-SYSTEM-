@@ -456,7 +456,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
             <div style={{ fontSize: 12, color: "#b45309" }}>The system auto-generated salaries for this month on the 25th. Review and approve each one so workers can see them.</div>
             <div style={{ fontSize: 11, color: "#92400e", marginTop: 4 }}>Workers: <strong>{pendingApprovalList.map(s => s.workerName).join(", ")}</strong></div>
           </div>
-          <button onClick={() => setTab("history")} style={{ ...S.btn, { background: "#d97706"), fontSize: 12, padding: "8px 16px", flexShrink: 0 }}>📋 Review Now</button>
+          <button onClick={() => setTab("history")} style={{ ...S.btn, background: "#d97706", fontSize: 12, padding: "8px 16px", flexShrink: 0 }}>📋 Review Now</button>
         </div>
       )}
 
@@ -504,7 +504,7 @@ export default function SalaryManager({ user, users, salaries, setSalaries, expe
             <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>
               Normally salaries auto-generate on the <strong>25th of each month</strong>. Trigger manually here at any time — skips workers who already have a salary record this month.
             </div>
-            <button onClick={triggerAutoGenerate} disabled={saving} style={{ ...S.btn, { background: "#6366f1"), padding: "10px 20px", fontSize: 13 }}>
+            <button onClick={triggerAutoGenerate} disabled={saving} style={{ ...S.btn, background: "#6366f1", padding: "10px 20px", fontSize: 13 }}>
               {saving ? "Generating…" : "🚀 Generate This Month's Salaries"}
             </button>
           </div>
