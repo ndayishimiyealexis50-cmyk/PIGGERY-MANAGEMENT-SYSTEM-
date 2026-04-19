@@ -40,6 +40,7 @@ import { auth } from './lib/firebase';
 // ── Page components ──────────────────────────────────
 import AHome              from './pages/AHome';
 import WHome from './pages/WHome';
+import BuyEntry from './pages/BuyEntry';
 import ErrorBoundary from './components/ErrorBoundary';
 import SmartAlerts        from './pages/SmartAlerts';
 import ProfitInsight      from './pages/ProfitInsight';
@@ -710,7 +711,7 @@ function AppShell() {
           {page === 'dailyentry'    && <DLogs {...commonProps} />}
           {page === 'feedentry'     && <FeedLog {...commonProps} />}
           {page === 'saleentry'     && <SaleLog {...commonProps} />}
-          {page === 'buyentry'      && <PlaceholderPage name="Buy Entry" {...commonProps} />}
+          {page === 'buyentry' && <BuyEntry {...commonProps} />}
           {page === 'pigentry'      && <Pigs {...commonProps} />}
           {page === 'assessment'    && <WorkerPigAssessment {...commonProps} />}
         </div>
