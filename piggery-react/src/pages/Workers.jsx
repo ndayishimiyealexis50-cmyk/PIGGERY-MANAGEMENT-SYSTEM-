@@ -2,6 +2,7 @@ import { WorkerTaskChart } from "../components/TaskManager";
 import { C, S } from '../utils/constants';
 import React, { useState, useEffect } from "react";
 import { fsSet } from "../lib/firestore";
+import { updateUserProfile } from "../lib/authHelpers";
 
 // Farm role definitions — same list as original index.html (FARM_ROLES)
 const FARM_ROLES = [
@@ -59,6 +60,7 @@ export default function Workers({ users, setUsers, tasks = [] }) {
       const updateData = { jobTitle: finalRole };
       if (shouldApprove) updateData.approved = true;
       await fsSet("users", users.map(u => (u.uid||u.id)===roleModal.uid ? {...u,...updateData} : u));
+await updateUserProfile(roleModal.uid, updateData);
       
       setUsers(prev => prev.map(u => (u.uid || u.id) === roleModal.uid ? { ...u, jobTitle: finalRole, ...(shouldApprove ? { approved: true } : {}) } : u));
       const rw = users.find(u => (u.uid || u.id) === roleModal.uid);
