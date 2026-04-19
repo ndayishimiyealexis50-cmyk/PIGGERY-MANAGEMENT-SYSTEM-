@@ -141,7 +141,7 @@ export function setOnlineFarmData(data) {
 
   _saveQueue = _saveQueue.then(async () => {
     try {
-      await setDoc(FS_FARM_DOC, _latestFarmData);
+      await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true });
       _offlineStatus.lastSync = new Date().toLocaleTimeString('en-GB', {
         hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kigali',
       });
@@ -181,7 +181,7 @@ export async function jbinAppend(key, newItem) {
       updatedAt: new Date().toISOString(),
     };
     lsSetFarm(_latestFarmData);
-    await setDoc(FS_FARM_DOC, _latestFarmData);
+    await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true });
     _offlineStatus.lastSync = new Date().toLocaleTimeString('en-GB', {
       hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kigali',
     });
@@ -197,7 +197,7 @@ export async function jbinAppend(key, newItem) {
       updatedAt: new Date().toISOString(),
     };
     lsSetFarm(_latestFarmData);
-    try { await setDoc(FS_FARM_DOC, _latestFarmData); } catch (e2) { /* offline */ }
+    try { await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true }); } catch (e2) { /* offline */ }
   }
 }
 
