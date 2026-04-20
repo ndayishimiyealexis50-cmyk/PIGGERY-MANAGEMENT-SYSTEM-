@@ -17,7 +17,7 @@ import {
 import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 
 import { auth, db, isAdminEmail, ensureUserProfile, _profileCache, generateOTP, storeOTP, verifyOTP } from '../lib/firebase';
-import { jbinAppend } from '../lib/firestore';
+
 import { useAuth } from '../context/AuthContext';
 
 // ── Shared style helpers ──────────────────────────────────────────────────────
