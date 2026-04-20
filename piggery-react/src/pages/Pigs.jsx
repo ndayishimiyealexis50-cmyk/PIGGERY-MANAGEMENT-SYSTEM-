@@ -1,7 +1,7 @@
 import { C, S } from '../utils/constants';
 import React, { useState, useRef } from "react";
-import { ... } from '../lib/firestore';
-import { ... } from '../lib/firebase';
+import { db } from '../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { uid, toDay, fmtRWF, capitalTx } from "../utils/helpers";
 import { getMarketPrice } from "../utils/market";
 
