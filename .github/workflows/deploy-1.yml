@@ -1,0 +1,53 @@
+name: Deploy FarmIQ to GitHub Pages
+
+on:
+  push:
+    branches: [main]          # runs every time you push to main
+  workflow_dispatch:           # lets you trigger manually from GitHub UI
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Babel (compile-time only)
+        run: |
+          npm install --no-save \
+            @babel/core \
+            @babel/preset-react \
+            @babel/plugin-transform-class-properties
+
+      - name: Compile JSX → plain JS
+        run: node compile.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
