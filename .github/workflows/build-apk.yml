@@ -14,8 +14,17 @@ jobs:
           distribution: temurin
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
-      - run: npm install
+          node-version: '20'
+      - run: npm install --legacy-peer-deps
+      - run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: "AIzaSyCBH-3ql8onw17geHrJXKUwdhN-EVjtg14"
+          VITE_FIREBASE_AUTH_DOMAIN: "my-farm-track.firebaseapp.com"
+          VITE_FIREBASE_PROJECT_ID: "my-farm-track"
+          VITE_FIREBASE_STORAGE_BUCKET: "my-farm-track.firebasestorage.app"
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "529287963399"
+          VITE_FIREBASE_APP_ID: "1:529287963399:web:733a9828916b61f4525ba2"
+          VITE_FIREBASE_MEASUREMENT_ID: "G-064719MRR4"
       - run: mkdir -p www && cp index.html www/
       - run: npx cap add android || true
       - run: npx cap sync android
