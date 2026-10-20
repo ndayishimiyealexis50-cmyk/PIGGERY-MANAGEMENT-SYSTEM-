@@ -1,1 +1,1 @@
-export { C, S } from './theme.js';
+export { C, S } from "./theme";
