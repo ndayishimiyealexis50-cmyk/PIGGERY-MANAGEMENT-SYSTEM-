@@ -1,3 +1,4 @@
+import Settings from "./pages/Settings";
 // src/App.jsx
 // ─── Root application component ───────────────────────────────────────────────
 // Responsibilities:
@@ -710,7 +711,7 @@ function AppShell() {
           {page === 'health'        && <VaccinationTracker {...commonProps} />}
           {page === 'payroll'       && isAdmin && <SalaryManager {...commonProps} />}
           {page === 'tasks'         && <TaskManager {...commonProps} />}
-          {page === 'settings'      && <PlaceholderPage name="Settings" {...commonProps} />}
+          {page === 'settings'      && <Settings {...commonProps} />}
           {page === 'audit'         && isAdmin && <AuditLog {...commonProps} />}
           {/* Worker-only routes */}
           {page === 'dailyentry'    && <DLogs {...commonProps} />}
