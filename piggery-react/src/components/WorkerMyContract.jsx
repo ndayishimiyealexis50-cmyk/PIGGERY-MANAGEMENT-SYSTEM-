@@ -3,7 +3,6 @@ import { C, S } from "../styles";
 // §23a — Worker views & prints their own employment contract
 
 import React, { useState, useEffect } from 'react'
-import { C, S } from '../utils/constants'
 import { getBusinessProfile, downloadContractPDF } from '../utils/pdf'
 import { db as _db } from '../lib/firebase'
 

@@ -62,6 +62,8 @@ import SalaryManager      from './pages/SalaryManager';
 import AuditLog           from './pages/AuditLog';
 import PigAssessmentHistory from './pages/PigAssessmentHistory';
 import WeeklyReport       from './pages/WeeklyReport';
+import WorkerMyContract from './components/WorkerMyContract';
+import MySalary from './pages/MySalary';
 import ProfessionalPDFGenerator from './pages/ProfessionalPDFGenerator';
 import AdvanceManager  from './pages/AdvanceManager';
 import BonusRequestManager from './components/BonusRequestManager';
@@ -522,6 +524,8 @@ function AppShell() {
     { id: 'assessment',  l: '📐 Assessment' },
     { id: 'advances',    l: '💰 Advance Request' },
     { id: 'bonus',       l: '🎁 Bonus Request' },
+    { id: 'mycontract', l: 'My Contract' },
+    { id: 'mysalary', l: 'My Salary' },
   ];
 
   const navItems = isAdmin ? adminNav : workerNav;
@@ -706,6 +710,8 @@ function AppShell() {
               {page === 'workers'     && isAdmin && <Workers {...commonProps} />}
               {page === 'performance' && isAdmin && <WorkerPerformance {...commonProps} />}
               {page === 'weeklyreport' && <WeeklyReport {...commonProps} />}
+                {page === 'mycontract' && <WorkerMyContract {...commonProps} />}
+                {page === 'mysalary' && <MySalary {...commonProps} />}
                 {page === 'pdfreports' && <ProfessionalPDFGenerator {...commonProps} />}
               {page === 'kpi'         && isAdmin && <KPI {...commonProps} />}
           {page === 'sales'         && <SaleLog {...commonProps} />}
