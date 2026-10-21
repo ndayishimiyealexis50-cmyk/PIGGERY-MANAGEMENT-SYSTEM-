@@ -5,7 +5,7 @@ import { C, S } from "../styles";
 import React, { useState, useEffect } from 'react'
 import { C, S } from '../utils/constants'
 import { isWAEnabled, sendWhatsApp } from '../utils/farm'
-import { _auth } from '../../firebase/config'
+import { auth as _auth } from '../lib/firebase'
 import { generateOTP, storeOTP, verifyOTP } from '../utils/otp'
 
 export default function ChangePassword({ user }) {

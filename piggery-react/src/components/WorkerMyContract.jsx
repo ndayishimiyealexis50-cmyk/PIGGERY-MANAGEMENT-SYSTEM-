@@ -5,7 +5,7 @@ import { C, S } from "../styles";
 import React, { useState, useEffect } from 'react'
 import { C, S } from '../utils/constants'
 import { getBusinessProfile, downloadContractPDF } from '../utils/pdf'
-import { _db } from '../../firebase/config'
+import { db as _db } from '../lib/firebase'
 
 const ctypeLabel = { permanent: 'Permanent Employment', fixed: 'Fixed-Term Contract', probation: 'Probationary Contract' }
 const roleLabels = {

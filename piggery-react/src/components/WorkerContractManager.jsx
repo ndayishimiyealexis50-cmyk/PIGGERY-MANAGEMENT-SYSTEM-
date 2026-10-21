@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import { C, S } from '../utils/constants'
 import { toDay } from '../utils/helpers'
 import { getBusinessProfile, downloadContractPDF } from '../utils/pdf'
-import { _db } from '../../firebase/config'
+import { db as _db } from '../lib/firebase'
 
 const DUTY_DEFAULTS = {
   farm_manager:  '• Oversee all daily farm operations and staff activities\n• Maintain comprehensive records in the FarmIQ management system\n• Plan and manage feed procurement, health protocols, and budgets\n• Report farm performance and financial summaries to the owner\n• Ensure biosecurity standards and animal welfare compliance at all times',

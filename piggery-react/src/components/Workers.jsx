@@ -4,7 +4,8 @@ import { C, S } from "../styles";
 
 import React, { useState, useEffect } from 'react'
 import { C, S } from '../utils/constants'
-import { _db, _profileCache } from '../../firebase/config'
+import { db as _db } from '../lib/firebase';
+import { _profileCache } from '../lib/authHelpers'
 import { getAllUserProfiles } from '../../firebase/db'
 import WorkerTaskChart from '../WorkerTaskChart'
 import WorkerContractManager from '../components/WorkerContractManager'

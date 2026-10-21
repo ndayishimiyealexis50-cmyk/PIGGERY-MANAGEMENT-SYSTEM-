@@ -59,7 +59,7 @@ export function isAdminUser(user) {
 
 // ── Profile cache (prevents double Firestore read on login) ──────────────────
 
-const _profileCache = new Map();
+export const _profileCache = new Map();
 
 /**
  * Get or create the Firestore profile for a Firebase Auth user.
