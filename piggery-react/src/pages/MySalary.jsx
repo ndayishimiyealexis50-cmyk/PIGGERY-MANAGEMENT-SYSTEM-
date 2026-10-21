@@ -19,6 +19,7 @@ export default function MySalary({ user, salaries }) {
   return (
     <div style={{ padding: 16 }}>
       <h2 style={{ margin: '0 0 12px' }}>My Salary</h2>
+      <div style={{ fontSize: 11, opacity: 0.6 }}>debug: {(salaries||[]).length} records · me: {user?.uid || user?.id} · ids: {(salaries||[]).map(s => s.workerId).join(', ')}</div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <div style={{ ...card, flex: 1 }}>
           <div style={{ fontSize: 12, opacity: 0.7 }}>Pending</div>
