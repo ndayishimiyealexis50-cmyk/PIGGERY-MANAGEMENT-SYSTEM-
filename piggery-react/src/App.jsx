@@ -62,6 +62,7 @@ import SalaryManager      from './pages/SalaryManager';
 import AuditLog           from './pages/AuditLog';
 import PigAssessmentHistory from './pages/PigAssessmentHistory';
 import WeeklyReport       from './pages/WeeklyReport';
+import ProfessionalPDFGenerator from './pages/ProfessionalPDFGenerator';
 import AdvanceManager  from './pages/AdvanceManager';
 import BonusRequestManager from './components/BonusRequestManager';
 import Workers         from './pages/Workers';
@@ -498,6 +499,7 @@ function AppShell() {
     { id: 'workers',      l: '👷 Workers' },
     { id: 'performance',  l: '📊 Performance' },
     { id: 'weeklyreport', l: '📋 Weekly Report' },
+    { id: 'pdfreports', l: 'PDF Reports' },
     { id: 'kpi',          l: '📈 KPI' },
     { id: 'pigs',          l: '🐷 Pig Records' },
     { id: 'feeding',       l: '🌾 Feeding' },
@@ -704,6 +706,7 @@ function AppShell() {
               {page === 'workers'     && isAdmin && <Workers {...commonProps} />}
               {page === 'performance' && isAdmin && <WorkerPerformance {...commonProps} />}
               {page === 'weeklyreport' && <WeeklyReport {...commonProps} />}
+                {page === 'pdfreports' && <ProfessionalPDFGenerator {...commonProps} />}
               {page === 'kpi'         && isAdmin && <KPI {...commonProps} />}
           {page === 'sales'         && <SaleLog {...commonProps} />}
           {page === 'daylogs'       && <DLogs {...commonProps} />}
