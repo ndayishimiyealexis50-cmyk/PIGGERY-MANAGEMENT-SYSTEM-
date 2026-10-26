@@ -1,3 +1,4 @@
+import { AdvanceAdminCard } from "../components/AdvanceManager";
 import { C, S } from '../utils/constants';
 import { useState } from "react";
 import { uid, toDay, fmtRWF } from "../utils/helpers";

@@ -37,7 +37,7 @@ function statusBadge(s) {
 }
 
 /* ─── Admin card ──────────────────────────────────────────────── */
-function AdvanceAdminCard({ adv, onApprove, onReject, onDelete }) {
+export function AdvanceAdminCard({ adv, onApprove, onReject, onDelete }) {
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason]       = useState("");
   const borderCol = adv.status === "approved" ? "#16a34a" : adv.status === "rejected" ? "#dc2626" : "#d97706";
