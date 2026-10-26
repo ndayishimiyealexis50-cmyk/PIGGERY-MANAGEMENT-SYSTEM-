@@ -25,7 +25,7 @@ export default function WHome({ user, feeds, sales, logs, pigs, setPage, logout,
       requestedAt: new Date().toISOString(),
     };
     const updated = [...(advances || []), rec];
-    try { await fsSet('advances', updated); } catch(e) {}
+    try { await fsSet('advances', updated); } catch(e) { console.error(e); alert('Request failed to send. Check your connection and try again.'); }
     setAmount(''); setReason(''); setShowForm(false); setSaving(false);
   }
 

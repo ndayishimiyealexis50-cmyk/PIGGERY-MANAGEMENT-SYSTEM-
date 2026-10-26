@@ -9,7 +9,7 @@
 // when offline.  Public API is identical to the HTML version so all
 // existing component code can be copy-pasted without changes.
 
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ── Firestore document refs ───────────────────────────────────────────────────
@@ -160,8 +160,33 @@ export function setOnlineFarmData(data) {
 }
 
 /** Shorthand: persist a single keyed list to the farm document. */
-export function fsSet(key, list) {
-  return setOnlineFarmData({ [key]: list });
+export async function fsSet(key, list) {
+  const idOf = (x) => (x && typeof x === 'object' && x.id !== undefined ? String(x.id) : null);
+  if (!Array.isArray(list) || !list.every((x) => idOf(x) !== null)) {
+    return setOnlineFarmData({ [key]: list });
+  }
+  const base = _latestFarmData && Array.isArray(_latestFarmData[key]) ? _latestFarmData[key] : [];
+  const newIds = new Set(list.map(idOf));
+  const deleted = new Set(base.map(idOf).filter((i) => i !== null && !newIds.has(i)));
+  try {
+    const merged = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(FS_FARM_DOC);
+      const server = snap.exists() && Array.isArray(snap.data()[key]) ? snap.data()[key] : [];
+      const extra = server.filter((x) => { const i = idOf(x); return i !== null && !newIds.has(i) && !deleted.has(i); });
+      const out = [...extra, ...list];
+      tx.set(FS_FARM_DOC, { [key]: out, updatedAt: new Date().toISOString() }, { merge: true });
+      return out;
+    });
+    _latestFarmData = { ...(_latestFarmData || {}), [key]: merged };
+    lsSetFarm(_latestFarmData);
+    _notifySyncListeners();
+  } catch (e) {
+    console.error('[FarmIQ] fsSet failed:', key, e);
+    if (e && e.code === 'permission-denied') {
+      alert('Sync blocked (permission-denied) for ' + key + '. Check Firestore rules.');
+    }
+    return setOnlineFarmData({ [key]: list });
+  }
 }
 
 /**
