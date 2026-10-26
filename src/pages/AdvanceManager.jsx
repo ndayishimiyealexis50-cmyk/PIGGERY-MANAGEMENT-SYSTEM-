@@ -1,6 +1,7 @@
 import { C, S } from '../utils/constants';
 import { useState } from "react";
 import { uid, toDay, fmtRWF } from "../utils/helpers";
+import { AdvanceAdminCard } from "../components/AdvanceManager";
 import { fsSet } from "../lib/firestore";
 import { capitalTx } from "../utils/capitalUtils";
 
