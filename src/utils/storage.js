@@ -1,5 +1,5 @@
 import { db } from '../lib/firebase';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 
 const FARM_DOC = doc(db, 'farmiq', 'farm');
 let _latestFarmData = {};
@@ -40,6 +40,27 @@ export function subscribeToFarmData(callback) {
   });
 }
 
-export function fsSet(key, list) {
-  return setOnlineFarmData({ [key]: list });
+export async function fsSet(key, list) {
+  const idOf = (x) => (x && typeof x === 'object' && x.id !== undefined ? String(x.id) : null);
+  const base = Array.isArray(_latestFarmData[key]) ? _latestFarmData[key] : [];
+  if (!Array.isArray(list) || !list.every((x) => idOf(x) !== null)) {
+    return setOnlineFarmData({ [key]: list });
+  }
+  const newIds = new Set(list.map(idOf));
+  const deleted = new Set(base.map(idOf).filter((i) => i !== null && !newIds.has(i)));
+  try {
+    const merged = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(FARM_DOC);
+      const server = snap.exists() && Array.isArray(snap.data()[key]) ? snap.data()[key] : [];
+      const extra = server.filter((x) => { const i = idOf(x); return i !== null && !newIds.has(i) && !deleted.has(i); });
+      const out = [...extra, ...list];
+      tx.set(FARM_DOC, { [key]: out }, { merge: true });
+      return out;
+    });
+    _latestFarmData = { ..._latestFarmData, [key]: merged };
+    localStorage.setItem('farmData', JSON.stringify(_latestFarmData));
+  } catch (e) {
+    console.error('[FarmIQ] fsSet failed:', key, e);
+    alert('Sync failed for ' + key + ': ' + (e.code || e.message));
+  }
 }
