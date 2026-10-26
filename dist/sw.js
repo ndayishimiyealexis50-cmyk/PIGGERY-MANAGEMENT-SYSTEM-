@@ -1,5 +1,5 @@
 /* FarmIQ Service Worker — Offline Support */
-const CACHE = 'farmiq-v2';
+const CACHE = 'farmiq-v4';
 
 const PRECACHE = [
   './',
