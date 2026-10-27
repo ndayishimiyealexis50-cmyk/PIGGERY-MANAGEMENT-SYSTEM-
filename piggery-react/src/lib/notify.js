@@ -1,3 +1,4 @@
+import { getAuth } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -9,7 +10,7 @@ export async function notifyChange(section, action, item) {
     if (!_actor) return;
     const isAdmin = _actor.role === 'admin';
     await addDoc(collection(db, 'notifications'), {
-      from: _actor.uid || _actor.id || _actor.name || 'unknown',
+      from: getAuth().currentUser?.uid || 'unknown',
       fromName: _actor.name || _actor.email || 'Unknown',
       fromRole: _actor.role || 'worker',
       to: isAdmin ? (item?.workerId || item?.assignedTo || 'all-workers') : 'admin',
@@ -19,5 +20,5 @@ export async function notifyChange(section, action, item) {
       read: false,
       createdAt: serverTimestamp(),
     });
-  } catch (e) { /* never block saving */ }
+  } catch (e) { console.error('notify failed', e); }
 }
