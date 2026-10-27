@@ -24,8 +24,9 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     try {
       await jbinAppend('sales', updated, { throwOnError: true });
       window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
-    } catch (e) {
-      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: '❌ Not saved. Try again' } }));
+    } catch (err) {
+      console.error(err.code, err.message);
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: `❌ Not saved. Try again (${err.code})` } }));
     }
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
