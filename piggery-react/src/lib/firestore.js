@@ -226,7 +226,3 @@ export function setOnlineFarmData(data) {
   return _setOnlineFarmDataRaw(data);
 }
 
-export async function fsSet(key, list) {
-  try { diffNotify(_latestFarmData, { [key]: list }); } catch (e) { console.error(e); }
-  return _fsSetRaw(key, list);
-}
