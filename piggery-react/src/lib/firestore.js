@@ -11,7 +11,7 @@
 
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
-import { notifyChange } from './notify';
+import { notifyChange, diffNotify } from './notify';
 
 // ── Firestore document refs ───────────────────────────────────────────────────
 // Exported so App can perform one-shot operations (e.g. capital wipe).
@@ -131,7 +131,7 @@ export async function getOnlineFarmData() {
  * Merge data into the farm document, writing immediately to localStorage and
  * queueing a Firestore write.  Returns the save promise so callers can await it.
  */
-export function setOnlineFarmData(data) {
+function _setOnlineFarmDataRaw(data) {
 
   _latestFarmData = {
     ...(_latestFarmData || {}),
@@ -219,4 +219,14 @@ export function subscribeToFarmData(callback) {
       callback(data);
     }
   });
+}
+
+export function setOnlineFarmData(data) {
+  try { diffNotify(_latestFarmData, data); } catch (e) { console.error(e); }
+  return _setOnlineFarmDataRaw(data);
+}
+
+export async function fsSet(key, list) {
+  try { diffNotify(_latestFarmData, { [key]: list }); } catch (e) { console.error(e); }
+  return _fsSetRaw(key, list);
 }
