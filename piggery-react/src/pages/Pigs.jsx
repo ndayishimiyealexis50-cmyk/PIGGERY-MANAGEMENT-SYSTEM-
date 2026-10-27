@@ -18,6 +18,17 @@ function savePigs(updatedPigs) {
   updateDoc(farmRef, { pigs: updatedPigs }).catch(e => console.error("Firestore savePigs error:", e));
 }
 
+function savePigEntry(updatedPigs) {
+  updateDoc(farmRef, { pigs: updatedPigs })
+    .then(() => {
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
+    })
+    .catch(e => {
+      console.error("Firestore savePigs error:", e);
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: '❌ Not saved. Try again' } }));
+    });
+}
+
 function breedCode(breed) {
   if (!breed) return "XX";
   const b = breed.trim();
@@ -223,7 +234,7 @@ export default function Pigs({ pigs, setPigs, logs, allData, capital, setCapital
     const newPig = { ...form, id:uid(), weight:parseFloat(form.weight)||0, length:parseFloat(form.length)||null, status:"active", measurements:[] };
     setPigs(p => {
       const updated = [...p, newPig];
-      savePigs(updated);
+      savePigEntry(updated);
       return updated;
     });
     if (setCapital && price > 0) {
@@ -239,7 +250,7 @@ export default function Pigs({ pigs, setPigs, logs, allData, capital, setCapital
     const newPigs = valid.map(r => ({ ...r, weight:parseFloat(r.weight)||0, length:parseFloat(r.length)||null, status:"active", measurements:[] }));
     setPigs(p => {
       const updated = [...p, ...newPigs];
-      savePigs(updated);
+      savePigEntry(updated);
       return updated;
     });
     if (setCapital && totalPrice > 0) {

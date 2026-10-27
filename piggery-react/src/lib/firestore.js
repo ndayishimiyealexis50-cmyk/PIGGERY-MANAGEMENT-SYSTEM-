@@ -169,7 +169,7 @@ export function fsSet(key, list) {
  * Fetch-then-merge append — safe for concurrent writes from multiple workers.
  * Reads the latest server state, merges newItem (de-duped by id), then writes.
  */
-export async function jbinAppend(key, newItem) {
+export async function jbinAppend(key, newItem, { throwOnError = false } = {}) {
   try {
     const snap       = await getDoc(FS_FARM_DOC);
     const serverData = snap.exists() ? snap.data() : {};
@@ -205,7 +205,11 @@ export async function jbinAppend(key, newItem) {
     };
     lsSetFarm(_latestFarmData);
     notifyChange(key, action, newItem);
-    try { await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true }); } catch (e2) { /* offline */ }
+    try {
+      await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true });
+    } catch (e2) {
+      if (throwOnError) throw e2;
+    }
   }
 }
 
@@ -225,4 +229,3 @@ export function setOnlineFarmData(data) {
   try { diffNotify(_latestFarmData, data); } catch (e) { console.error(e); }
   return _setOnlineFarmDataRaw(data);
 }
-

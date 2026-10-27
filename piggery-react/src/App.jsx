@@ -11,6 +11,7 @@
 // signInWithEmailAndPassword or onAuthStateChanged directly.
 
 import NotificationBell from './components/NotificationBell';
+import SaveToast from './components/SaveToast';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -556,6 +557,7 @@ function AppShell() {
       background: '#eef3ee', minHeight: '100vh', display: 'flex', color: '#111a11',
       backgroundImage: 'radial-gradient(ellipse 90% 50% at 50% -8%,rgba(22,163,74,.07) 0%,transparent 60%)',
     }}>
+      <SaveToast />
 
       {/* ── Session timeout warning ── */}
       {showTimeoutWarning && (

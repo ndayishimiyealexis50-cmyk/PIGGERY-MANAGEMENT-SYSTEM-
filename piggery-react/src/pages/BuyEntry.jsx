@@ -26,7 +26,14 @@ export default function BuyEntry({ stock, setStock, capital, setCapital, setPage
       updated = [...(stock || []), { id: uid(), name: form.name, category: form.category, quantity: qty, unit: form.unit, costPerUnit: cpu, minLevel: 0, notes: form.notes, lastUpdated: toDay() }];
     }
     setStock(updated);
-    await jbinAppend('stock', updated);
+    try {
+      await jbinAppend('stock', updated, { throwOnError: true });
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
+    } catch (e) {
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: '❌ Not saved. Try again' } }));
+      setSaving(false);
+      return;
+    }
 
     const cat = form.category === 'Medicine' ? 'Medicine' : form.category === 'Vaccine' ? 'Veterinary' : form.category === 'Feed' ? 'Feed Purchase' : 'Equipment';
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'expense', category: cat, amount: totalCost, description: `Purchased ${qty}${form.unit} of ${form.name}`, date: toDay() });

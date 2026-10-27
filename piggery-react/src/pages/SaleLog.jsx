@@ -12,7 +12,7 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
   const [addForm, setAddForm] = useState({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
   const isAdmin = isAdminUser(user);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const weight = parseFloat(addForm.weight);
     const priceKg = parseFloat(addForm.priceKg);
     if (!addForm.buyer || !weight || !priceKg || !addForm.date) return alert('Fill all fields.');
@@ -21,7 +21,12 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
     const entry = { id, buyer: addForm.buyer, weight, priceKg, total, date: addForm.date };
     const updated = [...sales, entry];
     setSales(updated);
-    jbinAppend('sales', updated);
+    try {
+      await jbinAppend('sales', updated, { throwOnError: true });
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
+    } catch (e) {
+      window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: '❌ Not saved. Try again' } }));
+    }
     if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
