@@ -11,6 +11,7 @@
 //   loginWithGoogle() — triggers signInWithRedirect (same-window, mobile-safe)
 //   logout()          — signs out and clears the local cache
 
+import { setActor } from '../lib/notify';
 import {
   createContext,
   useContext,
@@ -48,6 +49,7 @@ export function AuthProvider({ children }) {
   // true while Firebase is resolving the initial auth state
   const [loading, setLoading]               = useState(true);
   const [pendingApproval, setPendingApproval] = useState(false);
+  useEffect(() => { setActor(user); }, [user]);
 
   useEffect(() => {
     // ── Handle Google Redirect ───────────────────────────────────────────────

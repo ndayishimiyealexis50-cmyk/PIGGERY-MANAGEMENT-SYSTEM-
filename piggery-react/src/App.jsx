@@ -10,6 +10,7 @@
 // All auth state is managed by AuthContext — this file never calls
 // signInWithEmailAndPassword or onAuthStateChanged directly.
 
+import NotificationBell from './components/NotificationBell';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -596,7 +597,8 @@ function AppShell() {
           </div>
         </div>
 
-        {/* Nav items */}
+        <div style={{ padding: '6px 14px' }}><NotificationBell user={user} /></div>
+{/* Nav items */}
         <nav style={{ flex: 1, padding: '8px 0' }}>
           {navItems.map(({ id, l }) => {
             const active = page === id;

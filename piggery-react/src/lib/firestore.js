@@ -11,6 +11,7 @@
 
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
+import { notifyChange } from './notify';
 
 // ── Firestore document refs ───────────────────────────────────────────────────
 // Exported so App can perform one-shot operations (e.g. capital wipe).
@@ -177,6 +178,7 @@ export async function jbinAppend(key, newItem) {
       : serverData;
     const existing = Array.isArray(base[key]) ? base[key] : [];
     const merged   = [...existing.filter(x => x.id !== newItem.id), newItem];
+    const action = existing.some(x => x.id === newItem.id) ? 'updated' : 'added';
 
     _latestFarmData = {
       ...base,
@@ -184,6 +186,7 @@ export async function jbinAppend(key, newItem) {
       updatedAt: new Date().toISOString(),
     };
     lsSetFarm(_latestFarmData);
+    notifyChange(key, action, newItem);
     await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true });
     _offlineStatus.lastSync = new Date().toLocaleTimeString('en-GB', {
       hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kigali',
@@ -194,12 +197,14 @@ export async function jbinAppend(key, newItem) {
     const data     = _latestFarmData || {};
     const existing = Array.isArray(data[key]) ? data[key] : [];
     const merged   = [...existing.filter(x => x.id !== newItem.id), newItem];
+    const action = existing.some(x => x.id === newItem.id) ? 'updated' : 'added';
     _latestFarmData = {
       ...data,
       [key]:     merged,
       updatedAt: new Date().toISOString(),
     };
     lsSetFarm(_latestFarmData);
+    notifyChange(key, action, newItem);
     try { await setDoc(FS_FARM_DOC, _latestFarmData, { merge: true }); } catch (e2) { /* offline */ }
   }
 }
