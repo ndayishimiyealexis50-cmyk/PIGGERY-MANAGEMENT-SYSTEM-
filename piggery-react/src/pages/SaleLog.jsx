@@ -13,22 +13,31 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
   const isAdmin = isAdminUser(user);
 
   const handleAdd = async () => {
-    const weight = parseFloat(addForm.weight);
-    const priceKg = parseFloat(addForm.priceKg);
-    if (!addForm.buyer || !weight || !priceKg || !addForm.date) return alert('Fill all fields.');
+    const weight = Number(addForm.weight) || 0;
+    const priceKg = Number(addForm.priceKg) || 0;
+    const buyer = String(addForm.buyer ?? '').trim();
+    const date = String(addForm.date ?? '').trim();
+    if (!buyer || !weight || !priceKg || !date || !Number.isFinite(weight) || !Number.isFinite(priceKg)) return alert('Fill all fields.');
     const total = weight * priceKg;
-    const id = 'sale_' + Date.now();
-    const entry = { id, buyer: addForm.buyer, weight, priceKg, total, date: addForm.date };
+    if (!Number.isFinite(total)) return alert('Enter valid amounts.');
+    const entry = {
+      id: `sale_${Date.now()}`,
+      buyer,
+      weight: Number(weight) || 0,
+      priceKg: Number(priceKg) || 0,
+      total: Number(total) || 0,
+      date,
+    };
     const updated = [...sales, entry];
     setSales(updated);
     try {
-      await jbinAppend('sales', updated, { throwOnError: true });
+      await jbinAppend('sales', entry, { throwOnError: true });
       window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
     } catch (err) {
-      console.error(err.code, err.message);
+      console.error(err.code, err.message, JSON.stringify(entry));
       window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: `❌ Not saved. Try again (${err.code})` } }));
     }
-    if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${addForm.buyer}`, date: addForm.date });
+    if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${buyer}`, date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
   };
