@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../lib/firebase';
@@ -16,27 +17,33 @@ export default function NotificationBell({ user }) {
       const list = s.docs.map((d) => ({ id: d.id, ...d.data() }));
       list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       setItems(list.slice(0, 30));
-    }, () => {});
+    }, (e) => console.error('notif listen failed', e));
   }, [user, uid]);
 
   const unread = items.filter((i) => !i.read).length;
   const markRead = (id) => updateDoc(doc(db, 'notifications', id), { read: true }).catch(() => {});
 
+  const panel = open && createPortal(
+    <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,.4)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', top: 70, left: 12, right: 12, maxWidth: 360, maxHeight: '70vh', overflowY: 'auto', background: '#fff', color: '#111', borderRadius: 10, boxShadow: '0 6px 24px rgba(0,0,0,.35)' }}>
+        <div style={{ padding: 12, fontWeight: 700, borderBottom: '1px solid #eee' }}>Notifications</div>
+        {items.length === 0 && <div style={{ padding: 12 }}>No notifications yet</div>}
+        {items.map((i) => (
+          <div key={i.id} onClick={() => markRead(i.id)} style={{ padding: 12, borderBottom: '1px solid #eee', opacity: i.read ? 0.5 : 1 }}>
+            <b>{i.fromName}</b> {i.action} in {i.section}{i.summary ? ': ' + i.summary : ''}
+          </div>
+        ))}
+      </div>
+    </div>,
+    document.body
+  );
+
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={() => setOpen(!open)} style={{ fontSize: 20, background: 'none', border: 'none', cursor: 'pointer' }}>
-        🔔{unread > 0 && <span style={{ background: 'red', color: '#fff', borderRadius: 10, padding: '0 6px', fontSize: 12, marginLeft: 2 }}>{unread}</span>}
+    <div>
+      <button onClick={() => setOpen(true)} style={{ fontSize: 22, background: 'none', border: 'none', cursor: 'pointer', color: '#fff' }}>
+        🔔{unread > 0 && <span style={{ background: 'red', color: '#fff', borderRadius: 10, padding: '0 6px', fontSize: 12, marginLeft: 4 }}>{unread}</span>}
       </button>
-      {open && (
-        <div style={{ position: 'absolute', right: 0, top: 36, width: 290, maxHeight: 380, overflowY: 'auto', background: '#fff', color: '#111', border: '1px solid #ccc', borderRadius: 8, zIndex: 9999, boxShadow: '0 4px 14px rgba(0,0,0,.2)' }}>
-          {items.length === 0 && <div style={{ padding: 12 }}>No notifications</div>}
-          {items.map((i) => (
-            <div key={i.id} onClick={() => markRead(i.id)} style={{ padding: 10, borderBottom: '1px solid #eee', opacity: i.read ? 0.5 : 1, cursor: 'pointer' }}>
-              <b>{i.fromName}</b> {i.action} in {i.section}{i.summary ? ': ' + i.summary : ''}
-            </div>
-          ))}
-        </div>
-      )}
+      {panel}
     </div>
   );
 }
