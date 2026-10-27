@@ -144,6 +144,7 @@ function AppShell() {
   // ── UI states ─────────────────────────────────────────────────────────────
   const [page,           setPage]           = useState('home');
   const [sideOpen,       setSideOpen]       = useState(false);
+  const [expandedNavGroup, setExpandedNavGroup] = useState(null);
   const [isMobile,       setIsMobile]       = useState(window.innerWidth <= 768);
   const [pageKey,        setPageKey]        = useState(0);
   const [pageDir,        setPageDir]        = useState('right');
@@ -531,6 +532,32 @@ function AppShell() {
   ];
 
   const navItems = isAdmin ? adminNav : workerNav;
+  const navGroupDefinitions = isAdmin
+    ? [
+        { title: 'Overview & Insights', ids: ['home', 'alerts', 'profitinsight', 'feedefficiency', 'pigperformance', 'ai', 'bigdata', 'pnl', 'market', 'kpi'] },
+        { title: 'Farm Operations', ids: ['reproduction', 'stock', 'pigs', 'feeding', 'sales', 'daylogs', 'health'] },
+        { title: 'Approvals & Tasks', ids: ['approvals', 'tasks'] },
+        { title: 'Finance', ids: ['ledger', 'capital', 'advances', 'financials', 'payroll'] },
+        { title: 'People', ids: ['workers', 'performance'] },
+        { title: 'Reports', ids: ['weeklyreport', 'pdfreports'] },
+        { title: 'Administration', ids: ['settings', 'audit'] },
+      ]
+    : [
+        { title: 'Overview', ids: ['home'] },
+        { title: 'Daily Work', ids: ['dailyentry', 'feedentry', 'pigentry', 'assessment'] },
+        { title: 'Sales & Purchases', ids: ['saleentry', 'buyentry'] },
+        { title: 'Requests', ids: ['advances', 'bonus'] },
+        { title: 'My Account', ids: ['mycontract', 'mysalary'] },
+      ];
+  const navGroups = navGroupDefinitions.map(group => ({
+    ...group,
+    items: group.ids.map(id => navItems.find(item => item.id === id)).filter(Boolean),
+  }));
+
+  useEffect(() => {
+    const activeGroup = navGroups.find(group => group.items.some(item => item.id === page));
+    if (activeGroup) setExpandedNavGroup(activeGroup.title);
+  }, [page, isAdmin]);
 
   // ── Common props passed to all page components ────────────────────────────
   const commonProps = {
@@ -602,30 +629,54 @@ function AppShell() {
         <div style={{ padding: '6px 14px' }}><NotificationBell user={user} /></div>
 {/* Nav items */}
         <nav style={{ flex: 1, padding: '8px 0' }}>
-          {navItems.map(({ id, l }) => {
-            const active = page === id;
+          {navGroups.map(({ title, items }) => {
+            const expanded = expandedNavGroup === title;
             return (
-              <button
-                key={id}
-                className="side-nav-btn"
-                onClick={() => { setPage(id); setPageKey(k => k + 1); if (isMobile) setSideOpen(false); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-                  padding: '9px 16px 9px 20px',
-                  background: active ? 'rgba(74,222,128,.14)' : 'transparent',
-                  border: 'none',
-                  color: active ? '#c8f0d4' : 'rgba(255,255,255,.72)',
-                  fontSize: 12.5, cursor: 'pointer',
-                  borderLeft: active ? '3px solid #4ade80' : '3px solid transparent',
-                  marginBottom: 1, fontFamily: 'inherit',
-                  fontWeight: active ? 650 : 420, letterSpacing: active ? 0.1 : 0,
-                  borderRadius: '0 10px 10px 0', transition: 'all .16s',
-                  position: 'relative',
-                }}
-              >
-                {active && <span className="nav-active-dot" style={{ marginRight: 2 }} />}
-                {l}
-              </button>
+              <div key={title}>
+                <button
+                  type="button"
+                  aria-expanded={expanded}
+                  onClick={() => setExpandedNavGroup(expanded ? null : title)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '10px 17px 7px 20px', border: 'none',
+                    background: 'transparent', color: 'rgba(255,255,255,.48)',
+                    fontSize: 9.5, fontWeight: 750, letterSpacing: 1.25,
+                    textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  {title}
+                  <span aria-hidden="true" style={{ fontSize: 14, lineHeight: 1, color: 'rgba(255,255,255,.55)' }}>
+                    {expanded ? '⌄' : '›'}
+                  </span>
+                </button>
+                {expanded && items.map(({ id, l }) => {
+                  const active = page === id;
+                  return (
+                    <button
+                      key={id}
+                      className="side-nav-btn"
+                      onClick={() => { setPage(id); setPageKey(k => k + 1); if (isMobile) setSideOpen(false); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
+                        padding: '9px 16px 9px 20px',
+                        background: active ? 'rgba(74,222,128,.14)' : 'transparent',
+                        border: 'none',
+                        color: active ? '#c8f0d4' : 'rgba(255,255,255,.72)',
+                        fontSize: 12.5, cursor: 'pointer',
+                        borderLeft: active ? '3px solid #4ade80' : '3px solid transparent',
+                        marginBottom: 1, fontFamily: 'inherit',
+                        fontWeight: active ? 650 : 420, letterSpacing: active ? 0.1 : 0,
+                        borderRadius: '0 10px 10px 0', transition: 'all .16s',
+                        position: 'relative',
+                      }}
+                    >
+                      {active && <span className="nav-active-dot" style={{ marginRight: 2 }} />}
+                      {l}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
