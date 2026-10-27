@@ -47,10 +47,10 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
             <div style={S.sub}>{(isAdmin ? sales : sales.filter(s => s.worker === user?.name)).length} sales · {fmtRWF((isAdmin ? sales : sales.filter(s => s.worker === user?.name)).reduce((s, l) => s + (l.total || 0), 0))}</div>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          {isAdmin && (
+          {(
             <button onClick={() => setShowForm(true)} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: 'none', background: C.accent, color: '#fff', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600 }}>+ Add Sale</button>
           )}
-          <PDFBtn label="Finance PDF" type="finance" getData={() => allData} icon="🧾" color="#374151" />
+          {isAdmin && <PDFBtn label="Finance PDF" type="finance" getData={() => allData} icon="🧾" color="#374151" />}
         </div>
       </div>
 
