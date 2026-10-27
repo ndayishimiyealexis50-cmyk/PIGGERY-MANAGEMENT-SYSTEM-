@@ -68,6 +68,7 @@ import AdvanceManager  from './pages/AdvanceManager';
 import BonusRequestManager from './components/BonusRequestManager';
 import Workers         from './pages/Workers';
 import WorkerPerformance from './pages/WorkerPerformance';
+import NotificationBell from './components/NotificationBell';
 import Fin             from './pages/Fin';
 import AIPrediction       from './pages/AIPrediction';
 // ── Sub-components used as pages ──────────────────────
@@ -593,7 +594,8 @@ function AppShell() {
           </div>
         </div>
 
-        {/* Nav items */}
+        <div style={{ padding: '6px 14px' }}><NotificationBell user={user} /></div>
+{/* Nav items */}
         <nav style={{ flex: 1, padding: '8px 0' }}>
           {navItems.map(({ id, l }) => {
             const active = page === id;
