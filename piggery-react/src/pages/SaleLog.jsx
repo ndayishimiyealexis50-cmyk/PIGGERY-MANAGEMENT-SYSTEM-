@@ -1,5 +1,7 @@
 import { fsSet, jbinAppend } from '../lib/firestore';
 import React, { useState } from 'react';
+import { addDoc, collection } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
 import { C, S } from '../utils/constants';
 import { fmtRWF, isAdminUser, capitalTx } from '../utils/helpers';
 import AIPrediction from './AIPrediction';
@@ -28,16 +30,33 @@ export default function SaleLog({ sales, setSales, pigs, feeds, logs, expenses, 
       total: Number(total) || 0,
       date,
     };
-    const updated = [...sales, entry];
-    setSales(updated);
+    let payload = entry;
     try {
-      await jbinAppend('sales', entry, { throwOnError: true });
+      if (isAdmin) {
+        const updated = [...sales, entry];
+        setSales(updated);
+        await jbinAppend('sales', entry, { throwOnError: true });
+      } else {
+        const workerId = String(auth.currentUser?.uid || '').trim();
+        if (!workerId) throw new Error('Authenticated worker UID is unavailable');
+        payload = {
+          workerId,
+          status: 'pending',
+          type: 'sale',
+          buyer,
+          kg: weight,
+          price: priceKg,
+          date,
+          total,
+        };
+        await addDoc(collection(db, 'activities'), payload);
+      }
       window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'saved', text: '✅ Saved successfully' } }));
     } catch (err) {
-      console.error(err.code, err.message, JSON.stringify(entry));
+      console.error(err.code, err.message, JSON.stringify(payload));
       window.dispatchEvent(new CustomEvent('app-saved', { detail: { type: 'error', text: `❌ Not saved. Try again (${err.code})` } }));
     }
-    if (capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${buyer}`, date });
+    if (isAdmin && capital && setCapital) capitalTx(capital, setCapital, { type: 'income', category: 'Pig Sale', amount: total, description: `Sold ${weight}kg to ${buyer}`, date });
     setAddForm({ buyer: '', weight: '', priceKg: '', date: new Date().toISOString().slice(0, 10) });
     setShowForm(false);
   };
